@@ -34,6 +34,11 @@ export default function App() {
   const [guestInviteState, setGuestInviteState] = useState<GuestInviteState>("none");
   const [studioSection, setStudioSection] = useState<StudioSection>("memory");
 
+  function openStudio(section: StudioSection) {
+    setStudioSection(section);
+    setStudioOpen(true);
+  }
+
   const selectedEntry = useMemo(
     () => entries.find((entry) => entry.id === selectedId) ?? newest(entries),
     [entries, selectedId],
@@ -199,12 +204,12 @@ export default function App() {
 
         <div className="header-actions">
           {role === "parent" && (
-            <button className="button button-primary" type="button" onClick={() => setStudioOpen(true)} aria-label="Add a memory">
+            <button className="button button-primary" type="button" onClick={() => openStudio("memory")} aria-label="Add a memory">
               <Plus size={19} aria-hidden="true" /> <span>Add a memory</span>
             </button>
           )}
           {role === "parent" && (
-            <button className="icon-button" type="button" onClick={() => { setStudioSection("settings"); setStudioOpen(true); }} aria-label="Family access">
+            <button className="icon-button" type="button" onClick={() => openStudio("settings")} aria-label="Family access">
               <Share2 size={19} aria-hidden="true" />
             </button>
           )}
@@ -221,7 +226,7 @@ export default function App() {
         )}
         {view === "calendar" && <CalendarView entries={entries} occasions={occasions} onSelectEntry={chooseEntry} />}
         {view === "albums" && (
-          <AlbumsView albums={albums} entries={entries} role={role} onCreateAlbum={() => setStudioOpen(true)} />
+          <AlbumsView albums={albums} entries={entries} role={role} onCreateAlbum={() => openStudio("album")} />
         )}
       </main>
 
