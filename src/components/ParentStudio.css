@@ -161,7 +161,8 @@
   bottom: 12px;
   min-height: 44px;
   display: inline-flex !important;
-  grid-auto-flow: column;
+  align-items: center;
+  justify-content: center;
   gap: 7px !important;
   padding: 0 14px !important;
   border-radius: 999px;
@@ -169,7 +170,11 @@
   background: var(--berry, #6e283f);
   font-size: .8rem;
   font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
 }
+
+.studio-photo-picker__action svg { flex: 0 0 auto; display: block; }
 
 .studio-photo-picker:focus-within { outline: 3px solid rgba(181, 134, 63, .78); outline-offset: 3px; }
 .studio-form__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
