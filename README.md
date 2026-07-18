@@ -65,7 +65,7 @@ Deploy the API:
 npm run deploy:api
 ```
 
-The Worker configuration deploys directly to the `api.babytsubery.com` custom domain and keeps its `workers.dev` route disabled. Cloudflare creates the API DNS record and certificate automatically. Keep the R2 bucket private.
+The Worker configuration deploys directly to the `journal-api.babytsubery.com` custom domain and keeps its `workers.dev` route disabled. Cloudflare creates the API DNS record and certificate automatically. Keep the R2 bucket private.
 
 ## GitHub Pages setup
 
@@ -75,7 +75,7 @@ The Worker configuration deploys directly to the `api.babytsubery.com` custom do
 4. Push to `main`; `.github/workflows/deploy-pages.yml` builds and publishes the site.
 5. Enable **Enforce HTTPS** when GitHub makes the option available.
 
-The production build calls `https://api.babytsubery.com`.
+The production build calls `https://journal-api.babytsubery.com`.
 
 ## DNS layout
 

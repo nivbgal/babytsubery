@@ -6,7 +6,7 @@
   "workers_dev": false,
   "routes": [
     {
-      "pattern": "api.babytsubery.com",
+      "pattern": "journal-api.babytsubery.com",
       "custom_domain": true
     }
   ],
