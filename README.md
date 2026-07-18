@@ -7,7 +7,7 @@ The public application shell is a static React site deployed through GitHub Page
 ## What is included
 
 - Parent-only daily photo upload with optional caption
-- Browser-side WebP resizing and EXIF metadata removal
+- Browser-side WebP resizing, EXIF metadata removal, and iPhone HEIC/HEIF conversion
 - Private, revocable family invitation links
 - Latest-memory, calendar, and album views
 - Print/PDF album layout

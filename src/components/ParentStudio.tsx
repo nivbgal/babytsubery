@@ -49,8 +49,13 @@ function readableError(error: unknown, fallback: string) {
 
 async function loadImage(file: File): Promise<{ source: CanvasImageSource; width: number; height: number; close?: () => void }> {
   if ("createImageBitmap" in window) {
-    const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
-    return { source: bitmap, width: bitmap.width, height: bitmap.height, close: () => bitmap.close() };
+    try {
+      const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+      return { source: bitmap, width: bitmap.width, height: bitmap.height, close: () => bitmap.close() };
+    } catch {
+      // Some browsers expose createImageBitmap but still cannot decode HEIC/HEIF.
+      // Let the <img> fallback have a chance before using the converter below.
+    }
   }
 
   const url = URL.createObjectURL(file);
@@ -67,8 +72,32 @@ async function loadImage(file: File): Promise<{ source: CanvasImageSource; width
   }
 }
 
+function isHeicFile(file: File) {
+  const name = file.name.toLowerCase();
+  return file.type === "image/heic" || file.type === "image/heif" || /\.(heic|heif)$/.test(name);
+}
+
+async function loadUploadImage(file: File) {
+  try {
+    return await loadImage(file);
+  } catch (error) {
+    if (!isHeicFile(file)) throw error;
+
+    try {
+      const { default: heic2any } = await import("heic2any");
+      const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.92 });
+      const convertedBlob = Array.isArray(converted) ? converted[0] : converted;
+      if (!convertedBlob) throw new Error("No image was found in that file.");
+      const jpeg = new File([convertedBlob], file.name.replace(/\.(heic|heif)$/i, ".jpg"), { type: "image/jpeg" });
+      return await loadImage(jpeg);
+    } catch {
+      throw new Error("This iPhone photo could not be read. Try selecting it again, or choose Most Compatible in Camera settings.");
+    }
+  }
+}
+
 async function preparePhoto(file: File) {
-  const image = await loadImage(file);
+  const image = await loadUploadImage(file);
   try {
     const scale = Math.min(1, 1800 / Math.max(image.width, image.height));
     const width = Math.max(1, Math.round(image.width * scale));
@@ -355,14 +384,14 @@ export function ParentStudio({ isOpen, memories, occasions, initialSection = "me
                 <label className={`studio-photo-picker${previewUrl ? " studio-photo-picker--filled" : ""}`}>
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/*,.heic,.heif"
                     onChange={(event) => selectPhoto(event.target.files?.[0] ?? null)}
                     disabled={isUploading}
                   />
                   {previewUrl ? (
                     <img src={previewUrl} alt="Selected photograph preview" />
                   ) : (
-                    <span><ImagePlus size={30} strokeWidth={1.5} aria-hidden="true" /><strong>Choose a photograph</strong><small>JPEG, PNG, WebP, or a supported phone photo</small></span>
+                    <span><ImagePlus size={30} strokeWidth={1.5} aria-hidden="true" /><strong>Choose a photograph</strong><small>JPEG, PNG, WebP, or iPhone HEIC/HEIF — converted securely</small></span>
                   )}
                   <span className="studio-photo-picker__action"><Upload size={17} aria-hidden="true" /> {previewUrl ? "Choose another" : "Browse photos"}</span>
                 </label>
