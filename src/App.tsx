@@ -155,7 +155,16 @@ export default function App() {
 
   async function saveAlbum(album: Pick<Album, "title" | "description" | "entryIds">) {
     await api.saveAlbum(album);
-    await loadJournal();
+    setView("albums");
+    setStudioOpen(false);
+    resetPageScroll();
+    try {
+      await loadJournal();
+    } catch {
+      // The album is already safely stored. Retry the refresh without keeping
+      // the parents inside a completed creation flow or reporting a false error.
+      window.setTimeout(() => { void loadJournal().catch(() => undefined); }, 1200);
+    }
   }
 
   async function rotateInvite() {

@@ -60,3 +60,17 @@ test("bottom navigation uses a shared animated selection pill", async () => {
   assert.match(styles, /translate3d\(200%, 0, 0\)/);
   assert.match(styles, /cubic-bezier\(\.16, 1\.18, \.28, 1\)/);
 });
+
+test("album creation exits the studio and opens the album shelf", async () => {
+  const app = await readFile(new URL("../src/App.tsx", import.meta.url), "utf8");
+  assert.match(app, /async function saveAlbum[\s\S]*setView\("albums"\);[\s\S]*setStudioOpen\(false\)/);
+});
+
+test("albums render as paired spreads and export as landscape pages", async () => {
+  const albums = await readFile(new URL("../src/components/AlbumsView.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../src/components/AlbumsView.css", import.meta.url), "utf8");
+  assert.match(albums, /pairEntries\(openEntries\)/);
+  assert.match(albums, /className="album-spread"/);
+  assert.match(styles, /@page \{ size: A4 landscape; margin: 0; \}/);
+  assert.match(styles, /break-after: page/);
+});
