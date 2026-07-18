@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, LockKeyhole } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { MemoryVisual } from "./MemoryVisual";
 import type { MemoryEntry } from "../types";
 import "./TodayView.css";
@@ -11,19 +11,16 @@ export interface TodayViewProps {
   onSelectEntry: (entry: MemoryEntry) => void;
 }
 
-const longDate = new Intl.DateTimeFormat("en", {
-  weekday: "long",
-  month: "long",
-  day: "numeric",
-  year: "numeric",
-  timeZone: "UTC",
-});
-
 const stampDate = new Intl.DateTimeFormat("en", {
   month: "short",
   day: "2-digit",
   year: "numeric",
   timeZone: "UTC",
+});
+
+const exactPostTime = new Intl.DateTimeFormat("en", {
+  dateStyle: "long",
+  timeStyle: "short",
 });
 
 function asDate(value: string) {
@@ -99,11 +96,24 @@ export function TodayView({ entries, currentEntry, nickname, onSelectEntry }: To
 
   return (
     <article className="today-spread" aria-labelledby="today-title">
+      <h1 id="today-title" className="sr-only">
+        Latest memory for {nickname || "Baby Tsubery"}
+      </h1>
       <div className="today-photo-column">
-        <div className="today-photo-mat">
+        <div
+          className="today-photo-mat"
+          role="group"
+          aria-roledescription="carousel"
+          aria-label={`${stampDate.format(date)} photographs`}
+        >
           <span className="today-tape" aria-hidden="true" />
           <MemoryVisual entry={currentEntry} className="today-photo" />
-          <time className="today-photo-time" dateTime={currentEntry.createdAt} title={new Date(currentEntry.createdAt).toLocaleString()}>
+          <time
+            className="today-photo-time"
+            dateTime={currentEntry.createdAt}
+            title={new Date(currentEntry.createdAt).toLocaleString()}
+            aria-label={`Posted ${relativePostTime(currentEntry.createdAt, now)}, ${exactPostTime.format(new Date(currentEntry.createdAt))}`}
+          >
             {relativePostTime(currentEntry.createdAt, now)}
           </time>
           {previousPhoto && nextPhoto && (
@@ -124,7 +134,7 @@ export function TodayView({ entries, currentEntry, nickname, onSelectEntry }: To
               >
                 <ChevronRight size={22} aria-hidden="true" />
               </button>
-              <div className="today-carousel-dots" aria-label={`Photo ${carouselIndex + 1} of ${dayEntries.length}`}>
+              <div className="today-carousel-dots" role="group" aria-label="Choose a photograph">
                 {dayEntries.map((entry, index) => (
                   <button
                     type="button"
@@ -136,6 +146,9 @@ export function TodayView({ entries, currentEntry, nickname, onSelectEntry }: To
                   />
                 ))}
               </div>
+              <span className="sr-only" aria-live="polite" aria-atomic="true">
+                Photo {carouselIndex + 1} of {dayEntries.length}
+              </span>
             </>
           )}
           <time className="today-date-stamp" dateTime={currentEntry.memoryDate}>
@@ -145,19 +158,8 @@ export function TodayView({ entries, currentEntry, nickname, onSelectEntry }: To
       </div>
 
       <div className="today-copy">
-        <p className="eyebrow">Newest entry · Today</p>
-        <h1 id="today-title" className="display-type">
-          Welcome to the world Baby Tsubery
-        </h1>
-        <p className="today-caption">
+        <p className="today-caption" aria-live="polite" aria-atomic="true">
           {currentEntry.caption || `A little moment from ${nickname || "Baby Tsubery"}’s day.`}
-        </p>
-        <time className="today-long-date" dateTime={currentEntry.memoryDate}>
-          {longDate.format(date)}
-        </time>
-        <p className="today-private-note">
-          <LockKeyhole size={16} aria-hidden="true" />
-          Shared privately with family
         </p>
 
         {(previousDay || nextDay) && (

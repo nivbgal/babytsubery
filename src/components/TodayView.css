@@ -1,7 +1,7 @@
 .today-spread {
   min-height: min(720px, calc(100vh - 220px));
   display: grid;
-  grid-template-columns: minmax(0, 1.06fr) minmax(340px, 0.94fr);
+  grid-template-columns: minmax(0, 1.12fr) minmax(300px, 0.88fr);
   align-items: center;
   gap: clamp(36px, 7vw, 108px);
   max-width: 1260px;
@@ -25,6 +25,11 @@
 .today-photo {
   min-height: 560px;
   aspect-ratio: 4 / 5;
+  background: var(--shell);
+}
+
+.today-photo img {
+  object-fit: contain;
 }
 
 .today-tape {
@@ -56,33 +61,20 @@
 }
 
 .today-copy {
-  max-width: 570px;
-}
-
-.today-copy h1 {
-  max-width: 10ch;
-  margin-bottom: 27px;
-  color: var(--berry-deep);
-  font-size: clamp(3rem, 5.5vw, 6.25rem);
-  line-height: 0.95;
-  letter-spacing: -0.035em;
+  width: min(100%, 500px);
+  padding: clamp(24px, 4vw, 44px) 0 clamp(24px, 4vw, 44px) clamp(28px, 4vw, 48px);
+  border-left: 1px solid var(--line);
 }
 
 .today-caption {
-  max-width: 35rem;
-  margin-bottom: 8px;
-  color: var(--ink);
+  max-width: 18ch;
+  margin: 0;
+  color: var(--berry-deep);
   font-family: "Libre Caslon Display", Georgia, serif;
-  font-size: clamp(1.25rem, 2vw, 1.72rem);
-  line-height: 1.55;
-}
-
-.today-long-date {
-  display: block;
-  color: var(--muted);
-  font-size: 0.86rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-size: clamp(1.8rem, 3.4vw, 3.25rem);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
 }
 
 .today-photo-time {
@@ -128,8 +120,8 @@
   left: 50%;
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 6px 9px;
+  gap: 0;
+  padding: 2px 5px;
   border-radius: 999px;
   background: rgba(255, 250, 244, 0.84);
   box-shadow: 0 4px 14px rgba(71, 24, 39, 0.12);
@@ -137,30 +129,37 @@
 }
 
 .today-carousel-dots button {
-  width: 8px;
-  height: 8px;
+  position: relative;
+  width: 36px;
+  height: 36px;
   padding: 0;
   border: 0;
-  border-radius: 50%;
-  background: rgba(110, 40, 63, 0.28);
+  border-radius: 999px;
+  background: transparent;
 }
 
-.today-carousel-dots button.is-active {
+.today-carousel-dots button::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(110, 40, 63, 0.34);
+  transform: translate(-50%, -50%);
+}
+
+.today-carousel-dots button.is-active::before {
   width: 20px;
   border-radius: 999px;
   background: var(--berry);
 }
 
-.today-private-note {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 34px 0 0;
-  padding-top: 20px;
-  border-top: 1px solid var(--line);
-  color: var(--sage);
-  font-size: 0.82rem;
-  font-weight: 600;
+.today-carousel-control:focus-visible,
+.today-carousel-dots button:focus-visible {
+  outline: 3px solid var(--berry);
+  outline-offset: 3px;
 }
 
 .today-entry-nav {
@@ -237,7 +236,7 @@
   line-height: 1.7;
 }
 
-@media (max-width: 820px) {
+@media (max-width: 980px) {
   .today-spread {
     min-height: 0;
     grid-template-columns: 1fr;
@@ -253,11 +252,15 @@
   }
 
   .today-copy {
-    max-width: none;
+    width: min(92%, 570px);
+    padding: 30px 0 0;
+    border-top: 1px solid var(--line);
+    border-left: 0;
+    justify-self: center;
   }
 
-  .today-copy h1 {
-    max-width: 12ch;
+  .today-caption {
+    max-width: 22ch;
   }
 }
 
@@ -267,11 +270,15 @@
   }
 
   .today-date-stamp {
-    right: -9px;
+    right: 6px;
   }
 
-  .today-copy h1 {
-    font-size: clamp(2.7rem, 14vw, 4.35rem);
+  .today-copy {
+    width: 100%;
+  }
+
+  .today-caption {
+    font-size: clamp(1.75rem, 9vw, 2.65rem);
   }
 }
 

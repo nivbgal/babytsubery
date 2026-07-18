@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { LogOut, Plus, Settings2 } from "lucide-react";
+import { LogOut, Plus } from "lucide-react";
 import { AccessGate, type GuestInviteState } from "./components/AccessGate";
 import { AlbumsView } from "./components/AlbumsView";
 import { CalendarView } from "./components/CalendarView";
@@ -204,11 +204,6 @@ export default function App() {
               <Plus size={19} aria-hidden="true" /> <span>Add a memory</span>
             </button>
           )}
-          {role === "parent" && (
-            <button className="icon-button" type="button" onClick={() => setStudioOpen(true)} aria-label="Parent settings">
-              <Settings2 size={19} aria-hidden="true" />
-            </button>
-          )}
           <button className="icon-button" type="button" onClick={() => void logout()} aria-label="Leave the private journal">
             <LogOut size={19} aria-hidden="true" />
           </button>
@@ -216,6 +211,7 @@ export default function App() {
       </header>
 
       <main className="view-container">
+        <p className="sr-only" aria-live="polite">{view[0].toUpperCase() + view.slice(1)} view</p>
         {view === "today" && (
           <TodayView entries={entries} currentEntry={selectedEntry} nickname={nickname} onSelectEntry={chooseEntry} />
         )}

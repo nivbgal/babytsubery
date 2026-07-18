@@ -122,7 +122,6 @@ export function AlbumsView({ albums, entries, role, onCreateAlbum }: AlbumsViewP
                     </div>
                   </div>
                   <div className="album-card-copy">
-                    <h3>{album.title}</h3>
                     <p>{album.description || "A collection of favorite family moments."}</p>
                     <span>{albumEntries.length} {albumEntries.length === 1 ? "memory" : "memories"}</span>
                   </div>

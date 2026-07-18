@@ -54,6 +54,15 @@
   box-shadow: var(--shadow-paper);
 }
 
+.calendar-scroll {
+  border-radius: 24px;
+}
+
+.calendar-scroll:focus-visible {
+  outline: 3px solid var(--berry);
+  outline-offset: 4px;
+}
+
 .calendar-weekday {
   min-width: 0;
   padding: 15px 4px 13px;
@@ -139,6 +148,11 @@
   transform: scale(1.015);
 }
 
+.calendar-memory-button:focus-visible {
+  outline: 3px solid var(--berry);
+  outline-offset: 2px;
+}
+
 .calendar-today-label {
   position: absolute;
   z-index: 3;
@@ -192,7 +206,19 @@
 }
 
 @media (max-width: 440px) {
+  .calendar-view {
+    overflow-x: hidden;
+  }
+
+  .calendar-scroll {
+    overflow-x: auto;
+    padding-bottom: 8px;
+    border-radius: 14px;
+    overscroll-behavior-inline: contain;
+  }
+
   .calendar-grid {
+    min-width: 630px;
     border-radius: 14px;
   }
 

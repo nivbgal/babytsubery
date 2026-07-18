@@ -83,9 +83,10 @@ export function CalendarView({ entries, onSelectEntry }: CalendarViewProps) {
         </div>
       </header>
 
-      <div className="calendar-grid" role="grid" aria-label={monthTitle.format(visibleMonth)}>
+      <div className="calendar-scroll" tabIndex={0} aria-label={`Scrollable calendar for ${monthTitle.format(visibleMonth)}`}>
+      <div className="calendar-grid">
         {weekdays.map((weekday) => (
-          <div className="calendar-weekday" role="columnheader" key={weekday}>
+          <div className="calendar-weekday" key={weekday}>
             <span aria-hidden="true">{weekday}</span>
             <span className="sr-only">{weekdayNames[weekday]}</span>
           </div>
@@ -93,7 +94,7 @@ export function CalendarView({ entries, onSelectEntry }: CalendarViewProps) {
         {Array.from({ length: cellCount }, (_, index) => {
           const day = index - leadingBlankCount + 1;
           if (day < 1 || day > daysInMonth) {
-            return <div className="calendar-day calendar-day-blank" role="gridcell" key={`blank-${index}`} />;
+            return <div className="calendar-day calendar-day-blank" key={`blank-${index}`} />;
           }
 
           const key = dateKey(year, month, day);
@@ -105,8 +106,6 @@ export function CalendarView({ entries, onSelectEntry }: CalendarViewProps) {
           return (
             <div
               className={`calendar-day${isToday ? " is-today" : ""}${entry ? " has-memory" : ""}`}
-              role="gridcell"
-              aria-selected={entry ? "false" : undefined}
               key={key}
             >
               {entry ? (
@@ -133,6 +132,7 @@ export function CalendarView({ entries, onSelectEntry }: CalendarViewProps) {
             </div>
           );
         })}
+      </div>
       </div>
     </section>
   );

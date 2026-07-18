@@ -221,6 +221,11 @@
 .album-page-photo {
   min-height: 500px;
   aspect-ratio: 4 / 5;
+  background: var(--shell);
+}
+
+.album-page-photo img {
+  object-fit: contain;
 }
 
 .album-page-copy time {

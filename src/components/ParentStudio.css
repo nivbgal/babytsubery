@@ -12,6 +12,7 @@
 .parent-studio {
   width: min(660px, 100%);
   height: 100%;
+  height: 100dvh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -176,7 +177,7 @@
 
 .studio-photo-picker__action svg { flex: 0 0 auto; display: block; }
 
-.studio-photo-picker:focus-within { outline: 3px solid rgba(181, 134, 63, .78); outline-offset: 3px; }
+.studio-photo-picker:focus-within { outline: 3px solid var(--berry, #6e283f); outline-offset: 3px; }
 .studio-form__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
 .studio-field {
@@ -222,7 +223,7 @@
 .studio-memory-option input { position: absolute; opacity: 0; }
 .studio-memory-option__check { width: 24px; height: 24px; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid rgba(110, 40, 63, .38); border-radius: 7px; color: #fffaf4; }
 .studio-memory-option input:checked + .studio-memory-option__check { border-color: var(--berry, #6e283f); background: var(--berry, #6e283f); }
-.studio-memory-option:focus-within { outline: 3px solid rgba(181, 134, 63, .72); outline-offset: 2px; }
+.studio-memory-option:focus-within { outline: 3px solid var(--berry, #6e283f); outline-offset: 2px; }
 .studio-memory-option > span:last-child { min-width: 0; display: grid; gap: 3px; }
 .studio-memory-option strong { color: var(--berry-deep, #471827); font-size: .85rem; }
 .studio-memory-option small { overflow: hidden; color: var(--muted, #76686a); text-overflow: ellipsis; white-space: nowrap; }
@@ -269,10 +270,11 @@
 @media (max-width: 620px) {
   .parent-studio__backdrop { padding: 0; }
   .parent-studio { border: 0; border-radius: 0; }
-  .parent-studio__header { padding: 20px 18px 16px; }
+  .parent-studio__header { padding: max(20px, env(safe-area-inset-top)) 18px 16px; }
+  .parent-studio__header > div { min-width: 0; }
   .parent-studio__tabs { padding-inline: 10px; }
   .parent-studio__tabs button { flex-direction: column; gap: 3px; font-size: .72rem; }
-  .parent-studio__body { padding: 18px 14px 28px; }
+  .parent-studio__body { padding: 18px 14px max(28px, env(safe-area-inset-bottom)); }
   .studio-section { padding: 16px; }
   .studio-form__grid { grid-template-columns: 1fr; }
   .studio-field--wide { grid-column: auto; }

@@ -167,7 +167,7 @@
 
 .access-gate__field:focus-within {
   border-color: var(--berry, #6e283f);
-  box-shadow: 0 0 0 3px rgba(110, 40, 63, .1);
+  box-shadow: 0 0 0 3px rgba(110, 40, 63, .2);
 }
 
 .access-gate__field input {
@@ -236,7 +236,7 @@
   .access-gate { padding: 12px; }
   .access-gate__card { grid-template-columns: 1fr; border-radius: 22px; }
   .access-gate__keepsake { display: none; }
-  .access-gate__entry { min-height: calc(100vh - 24px); padding: 38px 24px; }
+  .access-gate__entry { min-height: calc(100vh - 24px); min-height: calc(100dvh - 24px); padding: 38px 24px; }
   .access-gate h1 { font-size: clamp(2.4rem, 13vw, 3.5rem); }
 }
 

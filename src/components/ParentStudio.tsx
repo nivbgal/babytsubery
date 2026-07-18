@@ -226,6 +226,12 @@ export function ParentStudio({ isOpen, memories, onClose, onUpload, onSaveAlbum,
 
   if (!isOpen) return null;
 
+  const sectionTitle = section === "memory"
+    ? "Add to her story"
+    : section === "album"
+      ? "Make an album"
+      : "Family access";
+
   return (
     <div className="parent-studio__backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <div
@@ -240,7 +246,7 @@ export function ParentStudio({ isOpen, memories, onClose, onUpload, onSaveAlbum,
         <header className="parent-studio__header">
           <div>
             <p className="parent-studio__date-stamp"><CalendarDays size={15} aria-hidden="true" /> Parent studio</p>
-            <h2 id={titleId}>Add to her story</h2>
+            <h2 id={titleId}>{sectionTitle}</h2>
           </div>
           <button className="parent-studio__close" type="button" onClick={onClose} aria-label="Close parent studio"><X aria-hidden="true" /></button>
         </header>
