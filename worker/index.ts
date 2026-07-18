@@ -41,6 +41,15 @@ interface AlbumRow {
   created_at: string;
 }
 
+interface OccasionRow {
+  id: string;
+  occasion_date: string;
+  title: string;
+  description: string | null;
+  type: "birthday" | "milestone" | "celebration" | "custom";
+  created_at: string;
+}
+
 class HttpError extends Error {
   constructor(readonly status: number, readonly code: string) {
     super(code);
@@ -79,10 +88,21 @@ async function route(request: Request, env: Env): Promise<Response> {
 
   if (request.method === "POST" && path === "/v1/auth/parent") {
     const body = await readJson<{ password?: unknown }>(request);
-    if (typeof body.password !== "string" || !(await verifyPassword(body.password, env.PARENT_PASSWORD_HASH))) {
+    if (typeof body.password !== "string" || !(await verifyPassword(body.password, await parentPasswordHash(env)))) {
       throw new HttpError(401, "invalid_credentials");
     }
     return createSessionResponse(request, env, "parent");
+  }
+
+  if (request.method === "POST" && path === "/v1/auth/password") {
+    await requireParent(request, env);
+    const body = await readJson<{ currentPassword?: unknown; newPassword?: unknown }>(request);
+    if (typeof body.currentPassword !== "string" || typeof body.newPassword !== "string") throw new HttpError(400, "invalid_password");
+    if (body.newPassword.length < 12 || body.newPassword.length > 256) throw new HttpError(400, "password_too_short");
+    if (!(await verifyPassword(body.currentPassword, await parentPasswordHash(env)))) throw new HttpError(401, "invalid_credentials");
+    await env.DB.prepare("INSERT INTO settings (key, value, updated_at) VALUES ('parent_password_hash', ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at")
+      .bind(await hashPassword(body.newPassword), new Date().toISOString()).run();
+    return json({ ok: true });
   }
 
   if (request.method === "POST" && path === "/v1/auth/guest") {
@@ -131,6 +151,17 @@ async function route(request: Request, env: Env): Promise<Response> {
   if (request.method === "POST" && path === "/v1/albums") {
     await requireParent(request, env);
     return createAlbum(request, env);
+  }
+
+  if (request.method === "POST" && path === "/v1/occasions") {
+    await requireParent(request, env);
+    return createOccasion(request, env);
+  }
+
+  const occasionMatch = path.match(/^\/v1\/occasions\/([^/]+)$/);
+  if (request.method === "DELETE" && occasionMatch) {
+    await requireParent(request, env);
+    return deleteOccasion(decodeURIComponent(occasionMatch[1]), env);
   }
 
   if (request.method === "POST" && path === "/v1/invites/rotate") {
@@ -192,6 +223,9 @@ async function getJournal(request: Request, env: Env): Promise<Response> {
   const albumEntryResult = await env.DB.prepare(
     "SELECT album_id, entry_id FROM album_entries ORDER BY album_id, position",
   ).all<{ album_id: string; entry_id: string }>();
+  const occasionsResult = await env.DB.prepare(
+    "SELECT id, occasion_date, title, description, type, created_at FROM occasions ORDER BY occasion_date ASC, created_at ASC",
+  ).all<OccasionRow>();
 
   const entries = entriesResult.results.map((entry) => ({
     id: entry.id,
@@ -222,7 +256,16 @@ async function getJournal(request: Request, env: Env): Promise<Response> {
     };
   });
 
-  return json({ entries, albums, nickname: env.JOURNAL_NICKNAME?.trim() || "Our little one" });
+  const occasions = occasionsResult.results.map((occasion) => ({
+    id: occasion.id,
+    occasionDate: occasion.occasion_date,
+    title: occasion.title,
+    description: occasion.description,
+    type: occasion.type,
+    createdAt: occasion.created_at,
+  }));
+
+  return json({ entries, albums, occasions, nickname: env.JOURNAL_NICKNAME?.trim() || "Our little one" });
 }
 
 async function createEntry(request: Request, env: Env): Promise<Response> {
@@ -320,6 +363,27 @@ async function createAlbum(request: Request, env: Env): Promise<Response> {
   return json({ id }, 201);
 }
 
+async function createOccasion(request: Request, env: Env): Promise<Response> {
+  const body = await readJson<{ occasionDate?: unknown; title?: unknown; description?: unknown; type?: unknown }>(request);
+  const types = new Set(["birthday", "milestone", "celebration", "custom"]);
+  if (typeof body.occasionDate !== "string" || !isDate(body.occasionDate)) throw new HttpError(400, "invalid_date");
+  if (typeof body.title !== "string" || !body.title.trim() || body.title.length > 160) throw new HttpError(400, "invalid_occasion_title");
+  if (body.description !== undefined && body.description !== null && typeof body.description !== "string") throw new HttpError(400, "invalid_occasion_description");
+  if (typeof body.description === "string" && body.description.length > 500) throw new HttpError(400, "text_too_long");
+  if (typeof body.type !== "string" || !types.has(body.type)) throw new HttpError(400, "invalid_occasion_type");
+  const id = crypto.randomUUID();
+  await env.DB.prepare("INSERT INTO occasions (id, occasion_date, title, description, type, created_at) VALUES (?, ?, ?, ?, ?, ?)")
+    .bind(id, body.occasionDate, body.title.trim(), cleanOptional(body.description), body.type, new Date().toISOString()).run();
+  return json({ id }, 201);
+}
+
+async function deleteOccasion(id: string, env: Env): Promise<Response> {
+  if (!isId(id)) throw new HttpError(404, "occasion_not_found");
+  const result = await env.DB.prepare("DELETE FROM occasions WHERE id = ?").bind(id).run();
+  if (!result.meta.changes) throw new HttpError(404, "occasion_not_found");
+  return json({ ok: true });
+}
+
 async function rotateInvitation(env: Env): Promise<Response> {
   const token = randomToken(32);
   const now = new Date().toISOString();
@@ -366,6 +430,24 @@ async function verifyPassword(password: string, encoded: string): Promise<boolea
   } catch {
     return false;
   }
+}
+
+async function parentPasswordHash(env: Env): Promise<string> {
+  const row = await env.DB.prepare("SELECT value FROM settings WHERE key = 'parent_password_hash'").first<{ value: string }>();
+  return row?.value || env.PARENT_PASSWORD_HASH;
+}
+
+async function hashPassword(password: string): Promise<string> {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
+  const bits = new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: salt.buffer as ArrayBuffer, iterations: 100_000 }, key, 256));
+  return `pbkdf2_sha256$100000$${base64(salt)}$${base64(bits)}`;
+}
+
+function base64(bytes: Uint8Array): string {
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary);
 }
 
 async function sha256Hex(value: string): Promise<string> {

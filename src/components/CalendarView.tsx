@@ -1,11 +1,12 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
 import { MemoryVisual } from "./MemoryVisual";
-import type { MemoryEntry } from "../types";
+import type { MemoryEntry, Occasion } from "../types";
 import "./CalendarView.css";
 
 export interface CalendarViewProps {
   entries: MemoryEntry[];
+  occasions: Occasion[];
   onSelectEntry: (entry: MemoryEntry) => void;
 }
 
@@ -36,7 +37,7 @@ function dateKey(year: number, month: number, day: number) {
   return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-export function CalendarView({ entries, onSelectEntry }: CalendarViewProps) {
+export function CalendarView({ entries, occasions, onSelectEntry }: CalendarViewProps) {
   const latestDate = useMemo(
     () => [...entries].sort((a, b) => b.memoryDate.localeCompare(a.memoryDate))[0]?.memoryDate,
     [entries],
@@ -60,6 +61,11 @@ export function CalendarView({ entries, onSelectEntry }: CalendarViewProps) {
     map.forEach((dayEntries) => dayEntries.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
     return map;
   }, [entries]);
+  const occasionsByDate = useMemo(() => {
+    const map = new Map<string, Occasion[]>();
+    occasions.forEach((occasion) => map.set(occasion.occasionDate, [...(map.get(occasion.occasionDate) ?? []), occasion]));
+    return map;
+  }, [occasions]);
 
   function moveMonth(offset: number) {
     setVisibleMonth(new Date(year, month + offset, 1));
@@ -98,6 +104,7 @@ export function CalendarView({ entries, onSelectEntry }: CalendarViewProps) {
 
           const key = dateKey(year, month, day);
           const dayEntries = entriesByDate.get(key) ?? [];
+          const dayOccasions = occasionsByDate.get(key) ?? [];
           const entry = dayEntries[0];
           const isToday = key === todayKey;
           const labelDate = accessibleDate.format(new Date(year, month, day));
@@ -117,6 +124,7 @@ export function CalendarView({ entries, onSelectEntry }: CalendarViewProps) {
                   <MemoryVisual entry={entry} thumbnail />
                   <span className="calendar-day-number">{day}</span>
                   {isToday && <span className="calendar-today-label">Today</span>}
+                  {dayOccasions.length > 0 && <span className="calendar-occasion-dot" title={dayOccasions.map((occasion) => occasion.title).join(", ")} aria-label={dayOccasions.map((occasion) => occasion.title).join(", ")} />}
                   {dayEntries.length > 1 && (
                     <span className="calendar-entry-count" aria-hidden="true">+{dayEntries.length - 1}</span>
                   )}
@@ -125,6 +133,7 @@ export function CalendarView({ entries, onSelectEntry }: CalendarViewProps) {
                 <>
                   <span className="calendar-day-number">{day}</span>
                   {isToday && <span className="calendar-today-label">Today</span>}
+                  {dayOccasions.map((occasion) => <span className="calendar-occasion" key={occasion.id}><span className="calendar-occasion__mark" aria-hidden="true">✦</span>{occasion.title}</span>)}
                   <span className="sr-only">{labelDate}, no entry</span>
                 </>
               )}

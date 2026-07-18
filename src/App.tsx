@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { LogOut, Plus } from "lucide-react";
+import { LogOut, Plus, Share2 } from "lucide-react";
 import { AccessGate, type GuestInviteState } from "./components/AccessGate";
 import { AlbumsView } from "./components/AlbumsView";
 import { CalendarView } from "./components/CalendarView";
-import { ParentStudio } from "./components/ParentStudio";
+import { ParentStudio, type StudioSection } from "./components/ParentStudio";
 import { TodayView } from "./components/TodayView";
-import { demoAlbums, demoEntries } from "./data/demo";
 import { api, apiConfigured } from "./lib/api";
-import type { Album, MemoryEntry, Role, ViewName } from "./types";
+import type { Album, MemoryEntry, Occasion, Role, ViewName } from "./types";
 import "./App.css";
 
 function newest(entries: MemoryEntry[]) {
@@ -25,6 +24,7 @@ export default function App() {
   const [role, setRole] = useState<Role>("anonymous");
   const [entries, setEntries] = useState<MemoryEntry[]>([]);
   const [albums, setAlbums] = useState<Album[]>([]);
+  const [occasions, setOccasions] = useState<Occasion[]>([]);
   const [nickname, setNickname] = useState("Baby T");
   const [view, setView] = useState<ViewName>("today");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -32,7 +32,7 @@ export default function App() {
   const [booting, setBooting] = useState(true);
   const [fatalError, setFatalError] = useState("");
   const [guestInviteState, setGuestInviteState] = useState<GuestInviteState>("none");
-  const [demoMode, setDemoMode] = useState(false);
+  const [studioSection, setStudioSection] = useState<StudioSection>("memory");
 
   const selectedEntry = useMemo(
     () => entries.find((entry) => entry.id === selectedId) ?? newest(entries),
@@ -43,6 +43,7 @@ export default function App() {
     const journal = await api.journal();
     setEntries(journal.entries);
     setAlbums(journal.albums);
+    setOccasions(journal.occasions ?? []);
     setNickname(journal.nickname || "Baby T");
     setSelectedId((current) => {
       if (preferredEntryId && journal.entries.some((entry) => entry.id === preferredEntryId)) return preferredEntryId;
@@ -94,19 +95,10 @@ export default function App() {
   }, [loadJournal]);
 
   async function parentLogin(password: string) {
-    if (!apiConfigured) throw new Error("The private API has not been connected yet. Use the demo preview for now.");
+    if (!apiConfigured) throw new Error("The private journal service is not connected yet.");
     const session = await api.parentLogin(password);
     setRole(session.role);
     await loadJournal();
-  }
-
-  function openDemo() {
-    setDemoMode(true);
-    setRole("parent");
-    setEntries(demoEntries);
-    setAlbums(demoAlbums);
-    setNickname("Baby T");
-    setSelectedId(demoEntries[0].id);
   }
 
   function chooseEntry(entry: MemoryEntry) {
@@ -115,7 +107,6 @@ export default function App() {
   }
 
   async function uploadMemory(formData: FormData) {
-    if (demoMode) throw new Error("Uploads become available when the private Cloudflare service is connected.");
     const uploaded = await api.uploadMemory(formData);
     setSelectedId(uploaded.id);
     setView("today");
@@ -130,13 +121,11 @@ export default function App() {
   }
 
   async function saveAlbum(album: Pick<Album, "title" | "description" | "entryIds">) {
-    if (demoMode) throw new Error("Album saving becomes available when the private Cloudflare service is connected.");
     await api.saveAlbum(album);
     await loadJournal();
   }
 
   async function rotateInvite() {
-    if (demoMode) throw new Error("Invitation links become available when the private Cloudflare service is connected.");
     const { token } = await api.rotateInvite();
     const inviteUrl = `${window.location.origin}/?invite=${encodeURIComponent(token)}`;
     try {
@@ -147,13 +136,26 @@ export default function App() {
     return inviteUrl;
   }
 
+  async function changePassword(currentPassword: string, newPassword: string) {
+    await api.changePassword(currentPassword, newPassword);
+  }
+
+  async function saveOccasion(occasion: Pick<Occasion, "occasionDate" | "title" | "description" | "type">) {
+    await api.saveOccasion(occasion);
+    await loadJournal();
+  }
+
+  async function deleteOccasion(id: string) {
+    await api.deleteOccasion(id);
+    await loadJournal();
+  }
+
   async function logout() {
-    if (!demoMode && apiConfigured) await api.logout();
+    if (apiConfigured) await api.logout();
     setRole("anonymous");
     setEntries([]);
     setAlbums([]);
     setSelectedId(null);
-    setDemoMode(false);
     setStudioOpen(false);
   }
 
@@ -168,8 +170,6 @@ export default function App() {
         <AccessGate
           onParentLogin={parentLogin}
           guestInviteState={guestInviteState}
-          demoPreview={!apiConfigured}
-          onDemoPreview={openDemo}
         />
       </>
     );
@@ -180,7 +180,7 @@ export default function App() {
       <header className="site-header no-print">
         <div>
           <p className="brand-kicker">Our private family journal</p>
-          <p className="brand-title">Welcome to the world<br />Baby Tsubery</p>
+          <p className="brand-title">Welcome to the World,<br />Baby Tsubery</p>
         </div>
 
         <nav className="primary-nav" aria-label="Journal views">
@@ -198,10 +198,14 @@ export default function App() {
         </nav>
 
         <div className="header-actions">
-          {demoMode && <span className="demo-badge">Design preview</span>}
           {role === "parent" && (
             <button className="button button-primary" type="button" onClick={() => setStudioOpen(true)} aria-label="Add a memory">
               <Plus size={19} aria-hidden="true" /> <span>Add a memory</span>
+            </button>
+          )}
+          {role === "parent" && (
+            <button className="icon-button" type="button" onClick={() => { setStudioSection("settings"); setStudioOpen(true); }} aria-label="Family access">
+              <Share2 size={19} aria-hidden="true" />
             </button>
           )}
           <button className="icon-button" type="button" onClick={() => void logout()} aria-label="Leave the private journal">
@@ -215,21 +219,26 @@ export default function App() {
         {view === "today" && (
           <TodayView entries={entries} currentEntry={selectedEntry} nickname={nickname} onSelectEntry={chooseEntry} />
         )}
-        {view === "calendar" && <CalendarView entries={entries} onSelectEntry={chooseEntry} />}
+        {view === "calendar" && <CalendarView entries={entries} occasions={occasions} onSelectEntry={chooseEntry} />}
         {view === "albums" && (
           <AlbumsView albums={albums} entries={entries} role={role} onCreateAlbum={() => setStudioOpen(true)} />
         )}
       </main>
 
       {role === "parent" && (
-        <ParentStudio
-          isOpen={studioOpen}
-          memories={entries}
-          onClose={() => setStudioOpen(false)}
-          onUpload={uploadMemory}
-          onSaveAlbum={saveAlbum}
-          onRotateInvite={rotateInvite}
-        />
+          <ParentStudio
+            isOpen={studioOpen}
+            memories={entries}
+            occasions={occasions}
+            initialSection={studioSection}
+            onClose={() => setStudioOpen(false)}
+            onUpload={uploadMemory}
+            onSaveAlbum={saveAlbum}
+            onRotateInvite={rotateInvite}
+            onChangePassword={changePassword}
+            onSaveOccasion={saveOccasion}
+            onDeleteOccasion={deleteOccasion}
+          />
       )}
     </div>
   );

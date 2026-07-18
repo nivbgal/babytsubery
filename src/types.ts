@@ -29,5 +29,17 @@ export interface Album {
 export interface JournalPayload {
   entries: MemoryEntry[];
   albums: Album[];
+  occasions: Occasion[];
   nickname: string;
+}
+
+export type OccasionType = "birthday" | "milestone" | "celebration" | "custom";
+
+export interface Occasion {
+  id: string;
+  occasionDate: string;
+  title: string;
+  description: string | null;
+  type: OccasionType;
+  createdAt: string;
 }

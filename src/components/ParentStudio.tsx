@@ -4,27 +4,37 @@ import {
   CalendarDays,
   Camera,
   Check,
+  CheckCircle2,
+  Copy,
+  HeartHandshake,
   ImagePlus,
+  KeyRound,
   Link2,
   LoaderCircle,
   RefreshCw,
   Settings,
+  Trash2,
   Upload,
   X,
 } from "lucide-react";
-import type { Album, MemoryEntry } from "../types";
+import type { Album, MemoryEntry, Occasion, OccasionType } from "../types";
 import "./ParentStudio.css";
 
 export interface ParentStudioProps {
   isOpen: boolean;
   memories: MemoryEntry[];
+  occasions: Occasion[];
+  initialSection?: StudioSection;
   onClose: () => void;
   onUpload: (formData: FormData) => Promise<void>;
   onSaveAlbum: (album: Pick<Album, "title" | "description" | "entryIds">) => Promise<void>;
   onRotateInvite: () => Promise<string>;
+  onChangePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  onSaveOccasion: (occasion: Pick<Occasion, "occasionDate" | "title" | "description" | "type">) => Promise<void>;
+  onDeleteOccasion: (id: string) => Promise<void>;
 }
 
-type StudioSection = "memory" | "album" | "settings";
+export type StudioSection = "memory" | "album" | "settings" | "occasion";
 
 function localToday() {
   const date = new Date();
@@ -90,7 +100,7 @@ function formatMemoryDate(value: string) {
   return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(date);
 }
 
-export function ParentStudio({ isOpen, memories, onClose, onUpload, onSaveAlbum, onRotateInvite }: ParentStudioProps) {
+export function ParentStudio({ isOpen, memories, occasions, initialSection = "memory", onClose, onUpload, onSaveAlbum, onRotateInvite, onChangePassword, onSaveOccasion, onDeleteOccasion }: ParentStudioProps) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -113,6 +123,23 @@ export function ParentStudio({ isOpen, memories, onClose, onUpload, onSaveAlbum,
   const [rotateError, setRotateError] = useState("");
   const [rotatedInviteUrl, setRotatedInviteUrl] = useState("");
   const [isRotating, setIsRotating] = useState(false);
+  const [showRotateConfirm, setShowRotateConfirm] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordMessage, setPasswordMessage] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [occasionDate, setOccasionDate] = useState(localToday);
+  const [occasionTitle, setOccasionTitle] = useState("");
+  const [occasionDescription, setOccasionDescription] = useState("");
+  const [occasionType, setOccasionType] = useState<OccasionType>("milestone");
+  const [occasionError, setOccasionError] = useState("");
+  const [isSavingOccasion, setIsSavingOccasion] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) setSection(initialSection);
+  }, [initialSection, isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -224,13 +251,72 @@ export function ParentStudio({ isOpen, memories, onClose, onUpload, onSaveAlbum,
     }
   }
 
+  async function submitPassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setPasswordError("");
+    setPasswordMessage("");
+    if (newPassword.length < 12) {
+      setPasswordError("Use at least 12 characters for a strong shared password.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("The new passwords do not match.");
+      return;
+    }
+    setIsChangingPassword(true);
+    try {
+      await onChangePassword(currentPassword, newPassword);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordMessage("Password updated. Noa and Rotem can use the new password right away.");
+    } catch (error) {
+      setPasswordError(readableError(error, "We couldn’t update the password. Please try again."));
+    } finally {
+      setIsChangingPassword(false);
+    }
+  }
+
+  async function submitOccasion(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!occasionTitle.trim() || !occasionDate || isSavingOccasion) {
+      setOccasionError("Add a date and name this special moment.");
+      return;
+    }
+    setOccasionError("");
+    setIsSavingOccasion(true);
+    try {
+      await onSaveOccasion({ occasionDate, title: occasionTitle.trim(), description: occasionDescription.trim() || null, type: occasionType });
+      setOccasionTitle("");
+      setOccasionDescription("");
+      setOccasionDate(localToday());
+    } catch (error) {
+      setOccasionError(readableError(error, "We couldn’t save this special moment. Please try again."));
+    } finally {
+      setIsSavingOccasion(false);
+    }
+  }
+
+  async function copyInvite() {
+    if (!rotatedInviteUrl) return;
+    await navigator.clipboard?.writeText(rotatedInviteUrl);
+  }
+
+  async function shareInvite() {
+    if (!rotatedInviteUrl) return;
+    if (navigator.share) await navigator.share({ title: "Baby Tsubery’s private journal", text: "A new family invitation to Baby Tsubery’s journal", url: rotatedInviteUrl });
+    else await copyInvite();
+  }
+
   if (!isOpen) return null;
 
   const sectionTitle = section === "memory"
     ? "Add to her story"
     : section === "album"
       ? "Make an album"
-      : "Family access";
+      : section === "occasion"
+        ? "Mark a moment"
+        : "Family access";
 
   return (
     <div className="parent-studio__backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
@@ -254,6 +340,7 @@ export function ParentStudio({ isOpen, memories, onClose, onUpload, onSaveAlbum,
         <nav className="parent-studio__tabs" aria-label="Parent studio sections">
           <button type="button" onClick={() => setSection("memory")} aria-current={section === "memory" ? "page" : undefined}><Camera size={18} aria-hidden="true" /> Memory</button>
           <button type="button" onClick={() => setSection("album")} aria-current={section === "album" ? "page" : undefined}><BookHeart size={18} aria-hidden="true" /> Album</button>
+          <button type="button" onClick={() => setSection("occasion")} aria-current={section === "occasion" ? "page" : undefined}><HeartHandshake size={18} aria-hidden="true" /> Moments</button>
           <button type="button" onClick={() => setSection("settings")} aria-current={section === "settings" ? "page" : undefined}><Settings size={18} aria-hidden="true" /> Access</button>
         </nav>
 
@@ -343,22 +430,60 @@ export function ParentStudio({ isOpen, memories, onClose, onUpload, onSaveAlbum,
             <section className="studio-access" aria-labelledby="studio-access-title">
               <div className="studio-access__icon"><Link2 size={25} aria-hidden="true" /></div>
               <p className="parent-studio__date-stamp">Private family access</p>
-              <h3 id="studio-access-title">Rotate the invitation link</h3>
-              <p>
-                Rotating the link immediately retires the current family invitation. Anyone using the old link will need the new one, so only do this if it was shared beyond the people you trust.
-              </p>
-              <div className="studio-access__note"><strong>Before you continue</strong><span>The app will create the new invitation through the secure journal service. Share it privately with family afterward.</span></div>
-              {rotateError && <p className="studio-message studio-message--error" role="alert">{rotateError}</p>}
-              {rotatedInviteUrl && (
-                <div className="studio-invite-success" role="status">
-                  <strong>New invitation ready</strong>
-                  <span>It has been copied when clipboard access is available. You can also copy it here:</span>
-                  <code>{rotatedInviteUrl}</code>
+              <h3 id="studio-access-title">Share the family link</h3>
+              <p>Give trusted family members a private invitation. The link opens the journal without asking guests for a password.</p>
+              {rotatedInviteUrl ? (
+                <div className="studio-invite-card" role="status">
+                  <div className="studio-invite-card__heading"><CheckCircle2 size={18} aria-hidden="true" /><strong>Family link ready</strong></div>
+                  <span>It’s copied when your browser allows it. Share it directly or copy it again below.</span>
+                  <code>{new URL(rotatedInviteUrl).host}/invite</code>
+                  <div className="studio-invite-card__actions"><button className="studio-secondary" type="button" onClick={() => void copyInvite()}><Copy size={17} aria-hidden="true" /> Copy link</button><button className="studio-secondary" type="button" onClick={() => void shareInvite()}><HeartHandshake size={17} aria-hidden="true" /> Share</button></div>
                 </div>
+              ) : (
+                <div className="studio-access__note"><strong>No active link is shown here</strong><span>Create one when you’re ready to send the family invitation. You’ll see a clear warning before an old link is retired.</span></div>
               )}
-              <button className="studio-secondary" type="button" onClick={rotateInvite} disabled={isRotating}>
-                {isRotating ? <><LoaderCircle className="studio-spinner" size={19} aria-hidden="true" /> Rotating invitation…</> : <><RefreshCw size={19} aria-hidden="true" /> Rotate invitation link</>}
-              </button>
+              {rotateError && <p className="studio-message studio-message--error" role="alert">{rotateError}</p>}
+              {showRotateConfirm ? (
+                <div className="studio-confirm-card" role="alert"><strong>Replace the current family link?</strong><span>Everyone using the old link will immediately lose access. Only continue if you’re ready to send a new link.</span><div><button className="studio-secondary" type="button" onClick={() => setShowRotateConfirm(false)}>Keep current link</button><button className="studio-primary" type="button" onClick={() => { setShowRotateConfirm(false); void rotateInvite(); }} disabled={isRotating}>{isRotating ? "Creating…" : "Yes, create a new link"}</button></div></div>
+              ) : (
+                <button className="studio-secondary" type="button" onClick={() => setShowRotateConfirm(true)} disabled={isRotating}>
+                  <RefreshCw size={17} aria-hidden="true" /> {rotatedInviteUrl ? "Create a new link" : "Create family link"}
+                </button>
+              )}
+
+              <div className="studio-password-card">
+                <div className="studio-access__icon"><KeyRound size={23} aria-hidden="true" /></div>
+                <p className="parent-studio__date-stamp">Noa &amp; Rotem</p>
+                <h3>Change the parent password</h3>
+                <p>One shared password keeps the parents’ studio private.</p>
+                <form className="studio-password-form" onSubmit={submitPassword}>
+                  <label className="studio-field">Current password<input type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} autoComplete="current-password" required disabled={isChangingPassword} /></label>
+                  <label className="studio-field">New password<input type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} autoComplete="new-password" minLength={12} required disabled={isChangingPassword} /></label>
+                  <label className="studio-field">Confirm new password<input type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} autoComplete="new-password" minLength={12} required disabled={isChangingPassword} /></label>
+                  {passwordError && <p className="studio-message studio-message--error" role="alert">{passwordError}</p>}
+                  {passwordMessage && <p className="studio-message studio-message--success" role="status">{passwordMessage}</p>}
+                  <button className="studio-primary" type="submit" disabled={isChangingPassword}>{isChangingPassword ? "Updating password…" : "Update parent password"}</button>
+                </form>
+              </div>
+            </section>
+          )}
+
+          {section === "occasion" && (
+            <section className="studio-occasion" aria-labelledby="studio-occasion-title">
+              <div className="studio-section studio-section--blush">
+                <div className="studio-section__heading"><span className="studio-section__number">✦</span><div><h3 id="studio-occasion-title">Add a special moment</h3><p>Birthdays, first words, first teeth, and the tiny milestones you’ll want to find again.</p></div></div>
+                <form className="studio-form" onSubmit={submitOccasion}>
+                  <div className="studio-form__grid">
+                    <label className="studio-field">Date<input type="date" value={occasionDate} onChange={(event) => setOccasionDate(event.target.value)} required disabled={isSavingOccasion} /></label>
+                    <label className="studio-field">Kind<select value={occasionType} onChange={(event) => setOccasionType(event.target.value as OccasionType)} disabled={isSavingOccasion}><option value="birthday">Birthday</option><option value="milestone">Milestone</option><option value="celebration">Celebration</option><option value="custom">Other</option></select></label>
+                    <label className="studio-field studio-field--wide">Name<input value={occasionTitle} onChange={(event) => setOccasionTitle(event.target.value)} maxLength={160} placeholder="First word" required disabled={isSavingOccasion} /></label>
+                    <label className="studio-field studio-field--wide">Note <span>(optional)</span><textarea value={occasionDescription} onChange={(event) => setOccasionDescription(event.target.value)} maxLength={500} rows={3} placeholder="A little detail to remember…" disabled={isSavingOccasion} /></label>
+                  </div>
+                  {occasionError && <p className="studio-message studio-message--error" role="alert">{occasionError}</p>}
+                  <button className="studio-primary" type="submit" disabled={isSavingOccasion}>{isSavingOccasion ? "Saving moment…" : "Add to calendar"}</button>
+                </form>
+              </div>
+              {occasions.length > 0 && <div className="studio-occasion-list"><h3>Saved moments</h3>{occasions.map((occasion) => <div className="studio-occasion-item" key={occasion.id}><span><strong>{occasion.title}</strong><small>{formatMemoryDate(occasion.occasionDate)}</small></span><button type="button" className="icon-button" onClick={() => void onDeleteOccasion(occasion.id)} aria-label={`Remove ${occasion.title}`}><Trash2 size={16} aria-hidden="true" /></button></div>)}</div>}
             </section>
           )}
         </div>

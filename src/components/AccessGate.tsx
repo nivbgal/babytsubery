@@ -1,5 +1,5 @@
 import { FormEvent, useId, useState } from "react";
-import { ArrowRight, Eye, LoaderCircle, LockKeyhole, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, LoaderCircle, LockKeyhole, ShieldCheck, Sparkles } from "lucide-react";
 import "./AccessGate.css";
 
 export type GuestInviteState = "none" | "checking" | "invalid" | "expired";
@@ -7,8 +7,6 @@ export type GuestInviteState = "none" | "checking" | "invalid" | "expired";
 export interface AccessGateProps {
   onParentLogin: (password: string) => Promise<void>;
   guestInviteState?: GuestInviteState;
-  demoPreview?: boolean;
-  onDemoPreview?: () => void;
 }
 
 function errorMessage(error: unknown) {
@@ -19,8 +17,6 @@ function errorMessage(error: unknown) {
 export function AccessGate({
   onParentLogin,
   guestInviteState = "none",
-  demoPreview = false,
-  onDemoPreview,
 }: AccessGateProps) {
   const passwordId = useId();
   const [password, setPassword] = useState("");
@@ -66,7 +62,7 @@ export function AccessGate({
             <ShieldCheck size={22} />
           </div>
           <p className="access-gate__eyebrow">Private family journal</p>
-          <h1 id="access-title">Welcome to the world Baby Tsubery</h1>
+          <h1 id="access-title">Welcome to the World, Baby Tsubery</h1>
           <p className="access-gate__intro">
             A quiet place for loved ones to follow her story. Family guests enter automatically from their private invitation link.
           </p>
@@ -111,12 +107,6 @@ export function AccessGate({
               )}
             </button>
           </form>
-
-          {demoPreview && onDemoPreview && (
-            <button className="access-gate__demo" type="button" onClick={onDemoPreview}>
-              <Eye size={18} aria-hidden="true" /> Preview with demo memories
-            </button>
-          )}
 
           <p className="access-gate__privacy"><LockKeyhole size={14} aria-hidden="true" /> Photos stay private and are never indexed by search engines.</p>
         </div>

@@ -66,7 +66,8 @@ export function AlbumsView({ albums, entries, role, onCreateAlbum }: AlbumsViewP
         </header>
 
         {openEntries.length ? (
-          <div className="album-pages">
+          <div className="album-book" aria-label={`${openAlbum.title} stitched photo album`}>
+            <div className="album-book__spine" aria-hidden="true" />
             {openEntries.map((entry, index) => (
               <article className="album-page" key={entry.id}>
                 <div className="album-page-number" aria-hidden="true">{String(index + 1).padStart(2, "0")}</div>

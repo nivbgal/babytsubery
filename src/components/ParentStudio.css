@@ -69,7 +69,7 @@
 
 .parent-studio__tabs {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 6px;
   padding: 10px 18px;
   border-bottom: 1px solid rgba(110, 40, 63, .12);
@@ -247,6 +247,7 @@
 .studio-spinner { animation: studio-spin 850ms linear infinite; }
 .studio-message { margin: 0; padding: 11px 13px; border-radius: 10px; font-size: .84rem; line-height: 1.45; }
 .studio-message--error { color: #7d1f3a; background: rgba(233, 190, 192, .38); }
+.studio-message--success { color: #536047; background: rgba(123, 128, 107, .15); }
 
 .studio-access {
   padding: clamp(24px, 5vw, 42px);
@@ -264,6 +265,39 @@
 .studio-invite-success { display: grid; gap: 8px; margin-bottom: 14px; padding: 14px; border: 1px solid rgba(123, 128, 107, .34); border-radius: 14px; color: var(--berry-deep, #471827); background: rgba(123, 128, 107, .12); line-height: 1.45; }
 .studio-invite-success code { padding: 9px 10px; overflow-wrap: anywhere; border-radius: 8px; background: var(--paper-strong, #fffdf9); font-size: .76rem; }
 
+.studio-invite-card,
+.studio-password-card,
+.studio-confirm-card {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0;
+  padding: 18px;
+  border: 1px solid rgba(110, 40, 63, .16);
+  border-radius: 16px;
+  background: rgba(255, 253, 249, .72);
+}
+
+.studio-invite-card__heading { display: flex; align-items: center; gap: 8px; color: var(--sage, #7b806b); }
+.studio-invite-card > span,
+.studio-confirm-card > span,
+.studio-password-card > p { color: var(--muted, #76686a); font-size: .82rem; line-height: 1.5; }
+.studio-invite-card code { padding: 11px 12px; overflow-wrap: anywhere; border-radius: 9px; color: var(--berry-deep, #471827); background: rgba(233, 190, 192, .22); font-size: .78rem; }
+.studio-invite-card__actions,
+.studio-confirm-card > div { display: flex; flex-wrap: wrap; gap: 9px; }
+.studio-confirm-card { border-color: rgba(181, 134, 63, .38); background: rgba(255, 248, 221, .72); }
+.studio-confirm-card strong { color: #76501d; }
+.studio-password-card { margin-top: 32px; }
+.studio-password-card .studio-access__icon { margin-bottom: 0; }
+.studio-password-form { display: grid; gap: 12px; }
+.studio-password-form .studio-primary { width: 100%; }
+.studio-field select { width: 100%; min-height: 46px; padding: 0 12px; border: 1px solid rgba(110, 40, 63, .22); border-radius: 10px; color: var(--ink, #342629); background: #fffdf9; }
+.studio-occasion-list { display: grid; gap: 10px; margin-top: 22px; }
+.studio-occasion-list h3 { margin: 0; color: var(--berry-deep, #471827); font-family: "Libre Caslon Display", Georgia, serif; font-size: 1.65rem; font-weight: 400; }
+.studio-occasion-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid rgba(110, 40, 63, .14); border-radius: 12px; background: rgba(255, 250, 244, .76); }
+.studio-occasion-item span { display: grid; gap: 3px; min-width: 0; }
+.studio-occasion-item strong { color: var(--berry-deep, #471827); }
+.studio-occasion-item small { color: var(--muted, #76686a); }
+
 @keyframes parent-studio-arrive { from { opacity: 0; transform: translateX(22px); } }
 @keyframes studio-spin { to { transform: rotate(360deg); } }
 
@@ -273,7 +307,8 @@
   .parent-studio__header { padding: max(20px, env(safe-area-inset-top)) 18px 16px; }
   .parent-studio__header > div { min-width: 0; }
   .parent-studio__tabs { padding-inline: 10px; }
-  .parent-studio__tabs button { flex-direction: column; gap: 3px; font-size: .72rem; }
+  .parent-studio__tabs { gap: 3px; padding-inline: 8px; }
+  .parent-studio__tabs button { flex-direction: column; gap: 3px; padding-inline: 2px; font-size: .64rem; }
   .parent-studio__body { padding: 18px 14px max(28px, env(safe-area-inset-bottom)); }
   .studio-section { padding: 16px; }
   .studio-form__grid { grid-template-columns: 1fr; }
