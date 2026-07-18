@@ -37,6 +37,7 @@ test("authentication transitions reset Safari's retained login scroll", async ()
 
 test("mobile Today view fits short memories into the dynamic viewport", async () => {
   const todayCss = await readFile(new URL("../src/components/TodayView.css", import.meta.url), "utf8");
+  assert.match(todayCss, /\.today-photo\.memory-visual/);
   assert.match(todayCss, /height: clamp\(280px, 44dvh, 380px\)/);
   assert.match(todayCss, /max-height: 720px/);
   assert.match(todayCss, /height: clamp\(220px, 38dvh, 280px\)/);
