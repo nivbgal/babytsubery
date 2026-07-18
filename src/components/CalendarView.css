@@ -101,31 +101,42 @@
 
 .calendar-memory-button {
   position: absolute;
-  inset: 0;
-  width: 100%;
+  inset: clamp(4px, 0.55vw, 8px);
+  width: auto;
   min-height: 44px;
-  padding: 0;
-  border: 0;
+  padding: clamp(3px, 0.4vw, 5px) clamp(3px, 0.4vw, 5px) clamp(9px, 1vw, 14px);
+  border: 1px solid rgba(110, 40, 63, 0.16);
+  border-radius: 6px;
   color: inherit;
-  background: transparent;
+  background: var(--paper-strong);
+  box-shadow: 0 7px 18px rgba(71, 24, 39, 0.14), 0 1px 3px rgba(71, 24, 39, 0.08);
+  transition: box-shadow 180ms ease-out, transform 180ms ease-out;
 }
 
 .calendar-memory-button .memory-visual {
   min-height: 100%;
+  border: 1px solid rgba(71, 24, 39, 0.12);
+  border-radius: 3px;
   transition: filter 180ms ease-out, transform 220ms ease-out;
 }
 
 .calendar-memory-button::after {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: clamp(3px, 0.4vw, 5px) clamp(3px, 0.4vw, 5px) clamp(9px, 1vw, 14px);
+  border-radius: 3px;
   background: linear-gradient(to top, rgba(71, 24, 39, 0.19), transparent 55%);
   pointer-events: none;
 }
 
+.calendar-memory-button:hover {
+  box-shadow: 0 10px 24px rgba(71, 24, 39, 0.18), 0 2px 5px rgba(71, 24, 39, 0.09);
+  transform: translateY(-2px);
+}
+
 .calendar-memory-button:hover .memory-visual {
   filter: saturate(1.04) contrast(1.03);
-  transform: scale(1.025);
+  transform: scale(1.015);
 }
 
 .calendar-today-label {
@@ -201,6 +212,16 @@
     min-width: 21px;
     height: 21px;
     font-size: 0.62rem;
+  }
+
+  .calendar-memory-button {
+    inset: 3px;
+    padding: 2px 2px 7px;
+    border-radius: 4px;
+  }
+
+  .calendar-memory-button::after {
+    inset: 2px 2px 7px;
   }
 
   .calendar-today-label {
