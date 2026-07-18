@@ -108,7 +108,7 @@ export function AccessGate({
             </button>
           </form>
 
-          <p className="access-gate__privacy"><LockKeyhole size={14} aria-hidden="true" /> Noa &amp; Rotem, this space is just for your family. Your password protects the parents’ studio, and only people you choose to invite can view the journal.</p>
+          <p className="access-gate__privacy"><LockKeyhole size={14} aria-hidden="true" /> Noa &amp; Rotem, this space is for your family and friends. Your password protects your studio, and only people you choose to invite can view the journal.</p>
         </div>
       </section>
     </main>
