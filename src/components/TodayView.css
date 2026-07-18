@@ -70,11 +70,20 @@
 
 .today-caption {
   max-width: 35rem;
-  margin-bottom: 20px;
+  margin-bottom: 8px;
   color: var(--ink);
   font-family: "Libre Caslon Display", Georgia, serif;
   font-size: clamp(1.25rem, 2vw, 1.72rem);
   line-height: 1.55;
+}
+
+.today-post-time {
+  display: block;
+  margin-bottom: 18px;
+  color: var(--rose);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .today-long-date {

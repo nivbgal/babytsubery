@@ -39,12 +39,17 @@ export default function App() {
     [entries, selectedId],
   );
 
-  const loadJournal = useCallback(async () => {
+  const loadJournal = useCallback(async (preferredEntryId?: string) => {
     const journal = await api.journal();
     setEntries(journal.entries);
     setAlbums(journal.albums);
     setNickname(journal.nickname || "Baby T");
-    setSelectedId((current) => current && journal.entries.some((entry) => entry.id === current) ? current : newest(journal.entries)?.id ?? null);
+    setSelectedId((current) => {
+      if (preferredEntryId && journal.entries.some((entry) => entry.id === preferredEntryId)) return preferredEntryId;
+      return current && journal.entries.some((entry) => entry.id === current)
+        ? current
+        : newest(journal.entries)?.id ?? null;
+    });
   }, []);
 
   useEffect(() => {
@@ -111,13 +116,16 @@ export default function App() {
 
   async function uploadMemory(formData: FormData) {
     if (demoMode) throw new Error("Uploads become available when the private Cloudflare service is connected.");
-    await api.uploadMemory(formData);
+    const uploaded = await api.uploadMemory(formData);
+    setSelectedId(uploaded.id);
+    setView("today");
+    setStudioOpen(false);
     try {
-      await loadJournal();
+      await loadJournal(uploaded.id);
     } catch {
       // The photo is already safely stored. Retry the view refresh without
       // reporting the completed upload as a failure to the parents.
-      window.setTimeout(() => { void loadJournal().catch(() => undefined); }, 1200);
+      window.setTimeout(() => { void loadJournal(uploaded.id).catch(() => undefined); }, 1200);
     }
   }
 
