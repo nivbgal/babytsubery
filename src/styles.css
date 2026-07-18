@@ -67,14 +67,16 @@ svg {
 
 button,
 input,
-textarea {
+textarea,
+select {
   font: inherit;
 }
 
 button,
 a,
 input,
-textarea {
+textarea,
+select {
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -85,7 +87,8 @@ button {
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
-textarea:focus-visible {
+textarea:focus-visible,
+select:focus-visible {
   outline: 3px solid var(--berry);
   outline-offset: 3px;
 }

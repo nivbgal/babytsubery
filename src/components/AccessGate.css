@@ -179,6 +179,8 @@
   outline: none;
   color: var(--ink, #342629);
   background: transparent;
+  font-size: 1rem;
+  line-height: 1.4;
   appearance: none;
   -webkit-appearance: none;
 }

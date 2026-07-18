@@ -12,3 +12,18 @@ test("GitHub Pages keeps the custom domain", async () => {
   const cname = await readFile(new URL("../dist/CNAME", import.meta.url), "utf8");
   assert.equal(cname.trim(), "babytsubery.com");
 });
+
+test("iPhone photo preparation has HEIC support and a JPEG encoding fallback", async () => {
+  const studio = await readFile(new URL("../src/components/ParentStudio.tsx", import.meta.url), "utf8");
+  assert.match(studio, /accept="image\/\*,\.heic,\.heif"/);
+  assert.match(studio, /webpBlob\?\.type === "image\/webp"/);
+  assert.match(studio, /await encode\("image\/jpeg"\)/);
+});
+
+test("mobile parent inputs avoid Safari focus zoom", async () => {
+  const studioCss = await readFile(new URL("../src/components/ParentStudio.css", import.meta.url), "utf8");
+  const accessCss = await readFile(new URL("../src/components/AccessGate.css", import.meta.url), "utf8");
+  assert.match(studioCss, /font-size: 1rem/);
+  assert.match(studioCss, /scroll-padding-block/);
+  assert.match(accessCss, /font-size: 1rem/);
+});
