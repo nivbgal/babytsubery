@@ -27,3 +27,10 @@ test("mobile parent inputs avoid Safari focus zoom", async () => {
   assert.match(studioCss, /scroll-padding-block/);
   assert.match(accessCss, /font-size: 1rem/);
 });
+
+test("authentication transitions reset Safari's retained login scroll", async () => {
+  const app = await readFile(new URL("../src/App.tsx", import.meta.url), "utf8");
+  assert.match(app, /\[role, view\]/);
+  assert.match(app, /afterKeyboardCloses/);
+  assert.match(app, /document\.documentElement\.scrollTop = 0/);
+});

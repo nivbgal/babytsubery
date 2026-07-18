@@ -20,6 +20,12 @@ function friendlyError(error: unknown) {
   return "The private journal service is unavailable right now. Please try again shortly.";
 }
 
+function resetPageScroll() {
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}
+
 export default function App() {
   const [role, setRole] = useState<Role>("anonymous");
   const [entries, setEntries] = useState<MemoryEntry[]>([]);
@@ -38,13 +44,23 @@ export default function App() {
   useLayoutEffect(() => {
     const previousRestoration = window.history.scrollRestoration;
     window.history.scrollRestoration = "manual";
-    window.scrollTo(0, 0);
+    resetPageScroll();
     return () => { window.history.scrollRestoration = previousRestoration; };
   }, []);
 
   useLayoutEffect(() => {
-    window.scrollTo(0, 0);
-  }, [view]);
+    resetPageScroll();
+  }, [role, view]);
+
+  useEffect(() => {
+    if (role === "anonymous") return;
+    const frame = window.requestAnimationFrame(resetPageScroll);
+    const afterKeyboardCloses = window.setTimeout(resetPageScroll, 400);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(afterKeyboardCloses);
+    };
+  }, [role]);
 
   function openStudio(section: StudioSection) {
     setStudioSection(section);
