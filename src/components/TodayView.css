@@ -324,6 +324,16 @@
   .today-caption { font-size: clamp(1.45rem, 6.5vw, 1.8rem); }
 }
 
+@media (max-width: 360px) and (max-height: 620px) {
+  .today-spread { gap: 8px; }
+  .today-photo-mat { padding: 8px 8px 24px; }
+  .today-photo.memory-visual { height: clamp(170px, 32dvh, 220px); }
+  .today-copy { padding-top: 6px; }
+  .today-caption { font-size: 1.4rem; }
+  .today-entry-nav { gap: 8px; margin-top: 8px; }
+  .today-entry-nav button { min-height: 50px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .today-entry-nav button {
     transition: none;

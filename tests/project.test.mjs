@@ -41,6 +41,7 @@ test("mobile Today view fits short memories into the dynamic viewport", async ()
   assert.match(todayCss, /height: clamp\(280px, 44dvh, 380px\)/);
   assert.match(todayCss, /max-height: 720px/);
   assert.match(todayCss, /height: clamp\(220px, 38dvh, 280px\)/);
+  assert.match(todayCss, /height: clamp\(170px, 32dvh, 220px\)/);
 });
 
 test("Apple share and install metadata use the branded icon", async () => {
