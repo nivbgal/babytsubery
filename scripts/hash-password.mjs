@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import { pbkdf2Sync, randomBytes } from "node:crypto";
 
-const ITERATIONS = 210_000;
+// Cloudflare Workers currently caps Web Crypto PBKDF2 at 100,000 iterations.
+const ITERATIONS = 100_000;
 
 async function hiddenPassword(prompt) {
   if (!process.stdin.isTTY || typeof process.stdin.setRawMode !== "function") {

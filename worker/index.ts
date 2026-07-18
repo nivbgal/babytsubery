@@ -349,7 +349,7 @@ async function verifyPassword(password: string, encoded: string): Promise<boolea
   const parts = encoded?.split("$") ?? [];
   if (parts.length !== 4 || parts[0] !== "pbkdf2_sha256") return false;
   const iterations = Number(parts[1]);
-  if (!Number.isInteger(iterations) || iterations < 100_000 || iterations > 2_000_000) return false;
+  if (!Number.isInteger(iterations) || iterations !== 100_000) return false;
   try {
     const salt = fromBase64(parts[2]);
     const expected = fromBase64(parts[3]);
