@@ -155,17 +155,41 @@ p {
 }
 
 .primary-nav {
-  display: flex;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: center;
-  justify-content: center;
-  gap: 8px;
+  gap: 0;
   padding: 6px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.54);
 }
 
+.primary-nav::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 6px;
+  bottom: 6px;
+  left: 6px;
+  width: calc((100% - 12px) / 3);
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--berry), #842f4c);
+  box-shadow: 0 5px 14px rgba(71, 24, 39, .22), inset 0 1px 0 rgba(255, 255, 255, .14);
+  pointer-events: none;
+  transform: translate3d(0, 0, 0);
+  transition: transform 520ms cubic-bezier(.16, 1.18, .28, 1), border-radius 360ms ease, box-shadow 360ms ease;
+  will-change: transform;
+}
+
+.primary-nav[data-active-view="calendar"]::before { transform: translate3d(100%, 0, 0); }
+.primary-nav[data-active-view="albums"]::before { transform: translate3d(200%, 0, 0); }
+
 .nav-button {
+  position: relative;
+  z-index: 1;
   min-height: 44px;
   padding: 0 18px;
   border: 0;
@@ -173,13 +197,13 @@ p {
   color: var(--muted);
   background: transparent;
   font-weight: 600;
-  transition: color 180ms ease-out, background 180ms ease-out, transform 180ms ease-out;
+  transition: color 280ms ease, background 180ms ease-out, transform 420ms cubic-bezier(.16, 1.18, .28, 1);
 }
 
 .nav-button[aria-current="page"] {
   color: var(--paper);
-  background: var(--berry);
-  box-shadow: 0 4px 12px rgba(71, 24, 39, 0.18);
+  background: transparent;
+  transform: scale(1.035);
 }
 
 .nav-button:hover:not([aria-current="page"]) {

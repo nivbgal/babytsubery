@@ -216,7 +216,7 @@ export default function App() {
           <p className="brand-title">Welcome to the World,<br />Baby Tsubery</p>
         </div>
 
-        <nav className="primary-nav" aria-label="Journal views">
+        <nav className="primary-nav" aria-label="Journal views" data-active-view={view}>
           {(["today", "calendar", "albums"] as ViewName[]).map((item) => (
             <button
               className="nav-button"

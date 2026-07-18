@@ -51,3 +51,12 @@ test("Apple share and install metadata use the branded icon", async () => {
   assert.match(html, /rel="manifest" href="\/site\.webmanifest"/);
   assert.deepEqual(manifest.icons.map(({ sizes }) => sizes), ["192x192", "512x512"]);
 });
+
+test("bottom navigation uses a shared animated selection pill", async () => {
+  const app = await readFile(new URL("../src/App.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../src/styles.css", import.meta.url), "utf8");
+  assert.match(app, /data-active-view=\{view\}/);
+  assert.match(styles, /\.primary-nav::before/);
+  assert.match(styles, /translate3d\(200%, 0, 0\)/);
+  assert.match(styles, /cubic-bezier\(\.16, 1\.18, \.28, 1\)/);
+});
