@@ -66,7 +66,7 @@ Deploy the API:
 npm run deploy:api
 ```
 
-In Cloudflare, add `api.babytsubery.com` as the Worker's custom domain. Keep the R2 bucket private.
+The Worker configuration deploys directly to the `api.babytsubery.com` custom domain and keeps its `workers.dev` route disabled. Cloudflare creates the API DNS record and certificate automatically. Keep the R2 bucket private.
 
 ## GitHub Pages setup
 
