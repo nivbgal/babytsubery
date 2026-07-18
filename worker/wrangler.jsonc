@@ -11,9 +11,7 @@
     {
       "binding": "DB",
       "database_name": "baby-tsubery",
-      // Replace this valid-shaped placeholder with the ID returned by:
-      // npx wrangler d1 create baby-tsubery
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "75ab32b7-6f2c-4b0e-9495-ab82420b0626",
       "migrations_dir": "migrations"
     }
   ],

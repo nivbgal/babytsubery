@@ -40,15 +40,14 @@ npm test
 
 ## Cloudflare setup
 
-Authenticate and create the free resources:
+Authenticate and create the free resources. The production D1 database is already created and configured; the D1 creation command is only needed if you intentionally replace it:
 
 ```bash
 npx wrangler login
-npx wrangler d1 create baby-tsubery
 npx wrangler r2 bucket create baby-tsubery-photos
 ```
 
-Copy the returned D1 ID into `worker/wrangler.jsonc`, replacing the all-zero placeholder, then initialize the remote database:
+If you create a replacement D1 database, copy its returned ID into `worker/wrangler.jsonc`. Initialize a new remote database with:
 
 ```bash
 npm run db:remote
