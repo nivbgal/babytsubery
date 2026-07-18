@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { Info, LogOut, Plus, Share2 } from "lucide-react";
 import { AccessGate, type GuestInviteState } from "./components/AccessGate";
 import { AlbumsView } from "./components/AlbumsView";
@@ -34,6 +34,17 @@ export default function App() {
   const [guestInviteState, setGuestInviteState] = useState<GuestInviteState>("none");
   const [studioSection, setStudioSection] = useState<StudioSection>("memory");
   const [showParentNote, setShowParentNote] = useState(false);
+
+  useLayoutEffect(() => {
+    const previousRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+    window.scrollTo(0, 0);
+    return () => { window.history.scrollRestoration = previousRestoration; };
+  }, []);
+
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, [view]);
 
   function openStudio(section: StudioSection) {
     setStudioSection(section);
