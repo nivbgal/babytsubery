@@ -110,15 +110,21 @@ async function preparePhoto(file: File) {
     context.fillStyle = "#fffaf4";
     context.fillRect(0, 0, width, height);
     context.drawImage(image.source, 0, 0, width, height);
-    const blob = await new Promise<Blob>((resolve, reject) => {
+    const encode = (type: "image/webp" | "image/jpeg") => new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(
         (result) => result ? resolve(result) : reject(new Error("Your browser couldn’t create the web photograph.")),
-        "image/webp",
+        type,
         0.86,
       );
     });
+    // Safari/iOS can accept a WebP request but return a different format (or no
+    // blob at all). Never label bytes as WebP unless the browser confirms it.
+    let blob = await encode("image/webp");
+    let outputType: "image/webp" | "image/jpeg" = blob.type === "image/webp" ? "image/webp" : "image/jpeg";
+    if (outputType === "image/jpeg") blob = await encode("image/jpeg");
     const baseName = file.name.replace(/\.[^.]+$/, "") || "memory";
-    return new File([blob], `${baseName}.webp`, { type: "image/webp", lastModified: Date.now() });
+    const extension = outputType === "image/webp" ? "webp" : "jpg";
+    return new File([blob], `${baseName}.${extension}`, { type: outputType, lastModified: Date.now() });
   } finally {
     image.close?.();
   }
