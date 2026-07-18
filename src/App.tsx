@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { LogOut, Plus, Share2 } from "lucide-react";
+import { Info, LogOut, Plus, Share2 } from "lucide-react";
 import { AccessGate, type GuestInviteState } from "./components/AccessGate";
 import { AlbumsView } from "./components/AlbumsView";
 import { CalendarView } from "./components/CalendarView";
@@ -33,6 +33,7 @@ export default function App() {
   const [fatalError, setFatalError] = useState("");
   const [guestInviteState, setGuestInviteState] = useState<GuestInviteState>("none");
   const [studioSection, setStudioSection] = useState<StudioSection>("memory");
+  const [showParentNote, setShowParentNote] = useState(false);
 
   function openStudio(section: StudioSection) {
     setStudioSection(section);
@@ -213,9 +214,26 @@ export default function App() {
               <Share2 size={19} aria-hidden="true" />
             </button>
           )}
+          {role === "parent" && (
+            <button
+              className="icon-button parent-note-button"
+              type="button"
+              onClick={() => setShowParentNote((current) => !current)}
+              aria-label="A message for Noa and Rotem"
+              aria-expanded={showParentNote}
+              aria-controls="parent-note"
+            >
+              <Info size={19} aria-hidden="true" />
+            </button>
+          )}
           <button className="icon-button" type="button" onClick={() => void logout()} aria-label="Leave the private journal">
             <LogOut size={19} aria-hidden="true" />
           </button>
+          {role === "parent" && showParentNote && (
+            <div className="parent-note" id="parent-note" role="tooltip">
+              <p>To Noa and Rotem,<br /><br />With lots of love,<br /><br />Nivgal <span aria-label="red heart">❤️</span></p>
+            </div>
+          )}
         </div>
       </header>
 

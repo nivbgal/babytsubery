@@ -14,3 +14,37 @@
   transform: translateX(-50%);
   text-align: center;
 }
+
+.header-actions { position: relative; }
+
+.parent-note {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 12px);
+  right: 0;
+  width: min(280px, calc(100vw - 32px));
+  padding: 16px 18px;
+  border: 1px solid rgba(110, 40, 63, .16);
+  border-radius: 16px;
+  color: var(--berry-deep, #471827);
+  background: var(--paper-strong, #fffdf9);
+  box-shadow: 0 16px 34px rgba(71, 24, 39, .16);
+  animation: parent-note-arrive 180ms ease-out both;
+}
+
+.parent-note::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  right: 56px;
+  width: 11px;
+  height: 11px;
+  border-top: 1px solid rgba(110, 40, 63, .16);
+  border-left: 1px solid rgba(110, 40, 63, .16);
+  background: var(--paper-strong, #fffdf9);
+  transform: rotate(45deg);
+}
+
+.parent-note p { margin: 0; font-family: "Libre Caslon Display", Georgia, serif; font-size: 1.05rem; line-height: 1.2; }
+
+@keyframes parent-note-arrive { from { opacity: 0; transform: translateY(-4px); } }

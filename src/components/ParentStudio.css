@@ -203,6 +203,12 @@
   resize: vertical;
 }
 
+.studio-field input:not([type="date"]):not([type="password"]),
+.studio-field textarea {
+  unicode-bidi: plaintext;
+  text-align: start;
+}
+
 .studio-memory-list { min-width: 0; margin: 0; padding: 0; border: 0; }
 .studio-memory-list legend { width: 100%; display: flex; justify-content: space-between; margin-bottom: 10px; color: var(--berry-deep, #471827); font-weight: 700; }
 .studio-memory-list legend span { color: var(--rose, #c97784); font-size: .78rem; }

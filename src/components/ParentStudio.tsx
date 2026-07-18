@@ -404,7 +404,7 @@ export function ParentStudio({ isOpen, memories, occasions, initialSection = "me
                 </div>
                 <div className="studio-form__grid">
                   <label className="studio-field">Date <input type="date" value={memoryDate} onChange={(event) => setMemoryDate(event.target.value)} required disabled={isUploading} /></label>
-                  <label className="studio-field studio-field--wide">Caption <span>(optional)</span><textarea value={caption} onChange={(event) => setCaption(event.target.value)} rows={3} maxLength={500} placeholder="The softest afternoon light…" disabled={isUploading} /></label>
+                  <label className="studio-field studio-field--wide">Caption <span>(optional)</span><textarea dir="auto" value={caption} onChange={(event) => setCaption(event.target.value)} rows={3} maxLength={500} placeholder="The softest afternoon light…" disabled={isUploading} /></label>
                 </div>
               </div>
 
@@ -423,8 +423,8 @@ export function ParentStudio({ isOpen, memories, occasions, initialSection = "me
                   <div><h3>Gather a little chapter</h3><p>Choose a title, then collect the moments that belong together.</p></div>
                 </div>
                 <div className="studio-form__grid">
-                  <label className="studio-field">Album title <input value={albumTitle} onChange={(event) => setAlbumTitle(event.target.value)} maxLength={120} required disabled={isSavingAlbum} /></label>
-                  <label className="studio-field studio-field--wide">Description <span>(optional)</span><textarea value={albumDescription} onChange={(event) => setAlbumDescription(event.target.value)} rows={3} maxLength={500} disabled={isSavingAlbum} /></label>
+                  <label className="studio-field">Album title <input dir="auto" value={albumTitle} onChange={(event) => setAlbumTitle(event.target.value)} maxLength={120} required disabled={isSavingAlbum} /></label>
+                  <label className="studio-field studio-field--wide">Description <span>(optional)</span><textarea dir="auto" value={albumDescription} onChange={(event) => setAlbumDescription(event.target.value)} rows={3} maxLength={500} disabled={isSavingAlbum} /></label>
                 </div>
               </div>
 
@@ -505,8 +505,8 @@ export function ParentStudio({ isOpen, memories, occasions, initialSection = "me
                   <div className="studio-form__grid">
                     <label className="studio-field">Date<input type="date" value={occasionDate} onChange={(event) => setOccasionDate(event.target.value)} required disabled={isSavingOccasion} /></label>
                     <label className="studio-field">Kind<select value={occasionType} onChange={(event) => setOccasionType(event.target.value as OccasionType)} disabled={isSavingOccasion}><option value="birthday">Birthday</option><option value="milestone">Milestone</option><option value="celebration">Celebration</option><option value="custom">Other</option></select></label>
-                    <label className="studio-field studio-field--wide">Name<input value={occasionTitle} onChange={(event) => setOccasionTitle(event.target.value)} maxLength={160} placeholder="First word" required disabled={isSavingOccasion} /></label>
-                    <label className="studio-field studio-field--wide">Note <span>(optional)</span><textarea value={occasionDescription} onChange={(event) => setOccasionDescription(event.target.value)} maxLength={500} rows={3} placeholder="A little detail to remember…" disabled={isSavingOccasion} /></label>
+                    <label className="studio-field studio-field--wide">Name<input dir="auto" value={occasionTitle} onChange={(event) => setOccasionTitle(event.target.value)} maxLength={160} placeholder="First word" required disabled={isSavingOccasion} /></label>
+                    <label className="studio-field studio-field--wide">Note <span>(optional)</span><textarea dir="auto" value={occasionDescription} onChange={(event) => setOccasionDescription(event.target.value)} maxLength={500} rows={3} placeholder="A little detail to remember…" disabled={isSavingOccasion} /></label>
                   </div>
                   {occasionError && <p className="studio-message studio-message--error" role="alert">{occasionError}</p>}
                   <button className="studio-primary" type="submit" disabled={isSavingOccasion}>{isSavingOccasion ? "Saving moment…" : "Add to calendar"}</button>
