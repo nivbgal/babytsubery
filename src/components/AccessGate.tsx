@@ -64,7 +64,7 @@ export function AccessGate({
           <p className="access-gate__eyebrow">A little life, day by day</p>
           <h1 id="access-title">Welcome to the World, Baby Tsubery</h1>
           <p className="access-gate__intro">
-            A quiet place for loved ones to follow her story. Family guests enter automatically from their private invitation link.
+            A quiet place for loved ones to follow her story.
           </p>
 
           {guestInviteState === "checking" && (
@@ -108,7 +108,7 @@ export function AccessGate({
             </button>
           </form>
 
-          <p className="access-gate__privacy"><LockKeyhole size={14} aria-hidden="true" /> Photos stay private and are never indexed by search engines.</p>
+          <p className="access-gate__privacy"><LockKeyhole size={14} aria-hidden="true" /> Noa &amp; Rotem, this space is just for your family. Your password protects the parents’ studio, and only people you choose to invite can view the journal.</p>
         </div>
       </section>
     </main>
