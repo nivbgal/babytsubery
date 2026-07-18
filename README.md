@@ -53,11 +53,10 @@ If you create a replacement D1 database, copy its returned ID into `worker/wrang
 npm run db:remote
 ```
 
-Generate the shared parent-password hash locally and save the printed value as a Worker secret:
+Set the shared parent password without placing it in shell history or copying its hash manually:
 
 ```bash
-npm run password:hash -- "choose-a-long-parent-password"
-npx wrangler secret put PARENT_PASSWORD_HASH --config worker/wrangler.jsonc
+npm run --silent password:hash | npx wrangler secret put PARENT_PASSWORD_HASH --config worker/wrangler.jsonc
 ```
 
 Deploy the API:

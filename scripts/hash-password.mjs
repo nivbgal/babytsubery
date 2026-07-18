@@ -4,10 +4,10 @@ import { pbkdf2Sync, randomBytes } from "node:crypto";
 const ITERATIONS = 210_000;
 
 async function hiddenPassword(prompt) {
-  if (!process.stdin.isTTY || !process.stdout.isTTY || typeof process.stdin.setRawMode !== "function") {
+  if (!process.stdin.isTTY || typeof process.stdin.setRawMode !== "function") {
     throw new Error("Pass the password as an argument when no interactive terminal is available.");
   }
-  process.stdout.write(prompt);
+  process.stderr.write(prompt);
   process.stdin.setRawMode(true);
   process.stdin.resume();
   process.stdin.setEncoding("utf8");
@@ -17,7 +17,7 @@ async function hiddenPassword(prompt) {
       process.stdin.setRawMode(false);
       process.stdin.pause();
       process.stdin.removeListener("data", onData);
-      process.stdout.write("\n");
+      process.stderr.write("\n");
     };
     const onData = (character) => {
       if (character === "\u0003") {
