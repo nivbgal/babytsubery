@@ -162,10 +162,32 @@
   border-radius: 12px;
   color: var(--rose, #c97784);
   background: #fffdf9;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
-.access-gate__field:focus-within { border-color: var(--berry, #6e283f); box-shadow: 0 0 0 3px rgba(110, 40, 63, .1); }
-.access-gate__field input { width: 100%; min-width: 0; height: 48px; border: 0; outline: 0; color: var(--ink, #342629); background: transparent; }
+.access-gate__field:focus-within {
+  border-color: var(--berry, #6e283f);
+  box-shadow: 0 0 0 3px rgba(110, 40, 63, .1);
+}
+
+.access-gate__field input {
+  width: 100%;
+  min-width: 0;
+  height: 48px;
+  border: 0;
+  border-radius: inherit;
+  outline: none;
+  color: var(--ink, #342629);
+  background: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.access-gate__field input:focus,
+.access-gate__field input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
 
 .access-gate__field-error { margin: 0; color: #982d4e; font-size: .85rem; line-height: 1.4; }
 
