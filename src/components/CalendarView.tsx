@@ -57,6 +57,7 @@ export function CalendarView({ entries, onSelectEntry }: CalendarViewProps) {
       const key = entry.memoryDate.slice(0, 10);
       map.set(key, [...(map.get(key) ?? []), entry]);
     });
+    map.forEach((dayEntries) => dayEntries.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
     return map;
   }, [entries]);
 
@@ -97,7 +98,7 @@ export function CalendarView({ entries, onSelectEntry }: CalendarViewProps) {
 
           const key = dateKey(year, month, day);
           const dayEntries = entriesByDate.get(key) ?? [];
-          const entry = dayEntries[dayEntries.length - 1];
+          const entry = dayEntries[0];
           const isToday = key === todayKey;
           const labelDate = accessibleDate.format(new Date(year, month, day));
 

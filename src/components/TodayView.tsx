@@ -75,12 +75,25 @@ export function TodayView({ entries, currentEntry, nickname, onSelectEntry }: To
   }
 
   const orderedEntries = [...entries].sort((a, b) =>
-    a.memoryDate.localeCompare(b.memoryDate),
+    a.memoryDate.localeCompare(b.memoryDate) || b.createdAt.localeCompare(a.createdAt),
   );
-  const currentIndex = orderedEntries.findIndex((entry) => entry.id === currentEntry.id);
-  const previous = currentIndex > 0 ? orderedEntries[currentIndex - 1] : null;
-  const next = currentIndex >= 0 && currentIndex < orderedEntries.length - 1
-    ? orderedEntries[currentIndex + 1]
+  const dayEntries = orderedEntries
+    .filter((entry) => entry.memoryDate === currentEntry.memoryDate)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const carouselIndex = Math.max(0, dayEntries.findIndex((entry) => entry.id === currentEntry.id));
+  const previousPhoto = dayEntries.length > 1
+    ? dayEntries[(carouselIndex - 1 + dayEntries.length) % dayEntries.length]
+    : null;
+  const nextPhoto = dayEntries.length > 1
+    ? dayEntries[(carouselIndex + 1) % dayEntries.length]
+    : null;
+  const dayGroups = [...new Set(orderedEntries.map((entry) => entry.memoryDate))];
+  const currentDayIndex = dayGroups.indexOf(currentEntry.memoryDate);
+  const previousDay = currentDayIndex > 0
+    ? orderedEntries.find((entry) => entry.memoryDate === dayGroups[currentDayIndex - 1]) ?? null
+    : null;
+  const nextDay = currentDayIndex >= 0 && currentDayIndex < dayGroups.length - 1
+    ? orderedEntries.find((entry) => entry.memoryDate === dayGroups[currentDayIndex + 1]) ?? null
     : null;
   const date = asDate(currentEntry.memoryDate);
 
@@ -90,6 +103,41 @@ export function TodayView({ entries, currentEntry, nickname, onSelectEntry }: To
         <div className="today-photo-mat">
           <span className="today-tape" aria-hidden="true" />
           <MemoryVisual entry={currentEntry} className="today-photo" />
+          <time className="today-photo-time" dateTime={currentEntry.createdAt} title={new Date(currentEntry.createdAt).toLocaleString()}>
+            {relativePostTime(currentEntry.createdAt, now)}
+          </time>
+          {previousPhoto && nextPhoto && (
+            <>
+              <button
+                className="today-carousel-control today-carousel-control--previous"
+                type="button"
+                onClick={() => onSelectEntry(previousPhoto)}
+                aria-label="Previous photo from this day"
+              >
+                <ChevronLeft size={22} aria-hidden="true" />
+              </button>
+              <button
+                className="today-carousel-control today-carousel-control--next"
+                type="button"
+                onClick={() => onSelectEntry(nextPhoto)}
+                aria-label="Next photo from this day"
+              >
+                <ChevronRight size={22} aria-hidden="true" />
+              </button>
+              <div className="today-carousel-dots" aria-label={`Photo ${carouselIndex + 1} of ${dayEntries.length}`}>
+                {dayEntries.map((entry, index) => (
+                  <button
+                    type="button"
+                    className={index === carouselIndex ? "is-active" : ""}
+                    onClick={() => onSelectEntry(entry)}
+                    aria-label={`Show photo ${index + 1} of ${dayEntries.length}`}
+                    aria-current={index === carouselIndex ? "true" : undefined}
+                    key={entry.id}
+                  />
+                ))}
+              </div>
+            </>
+          )}
           <time className="today-date-stamp" dateTime={currentEntry.memoryDate}>
             {stampDate.format(date)}
           </time>
@@ -104,9 +152,6 @@ export function TodayView({ entries, currentEntry, nickname, onSelectEntry }: To
         <p className="today-caption">
           {currentEntry.caption || `A little moment from ${nickname || "Baby Tsubery"}’s day.`}
         </p>
-        <time className="today-post-time" dateTime={currentEntry.createdAt} title={new Date(currentEntry.createdAt).toLocaleString()}>
-          {relativePostTime(currentEntry.createdAt, now)}
-        </time>
         <time className="today-long-date" dateTime={currentEntry.memoryDate}>
           {longDate.format(date)}
         </time>
@@ -115,24 +160,24 @@ export function TodayView({ entries, currentEntry, nickname, onSelectEntry }: To
           Shared privately with family
         </p>
 
-        {(previous || next) && (
+        {(previousDay || nextDay) && (
           <nav className="today-entry-nav" aria-label="Browse journal entries">
-            {previous ? (
-              <button type="button" onClick={() => onSelectEntry(previous)}>
+            {previousDay ? (
+              <button type="button" onClick={() => onSelectEntry(previousDay)}>
                 <ChevronLeft size={18} aria-hidden="true" />
                 <span>
-                  <small>Previous memory</small>
-                  {stampDate.format(asDate(previous.memoryDate))}
+                  <small>Previous day</small>
+                  {stampDate.format(asDate(previousDay.memoryDate))}
                 </span>
               </button>
             ) : (
               <span aria-hidden="true" />
             )}
-            {next && (
-              <button type="button" onClick={() => onSelectEntry(next)}>
+            {nextDay && (
+              <button type="button" onClick={() => onSelectEntry(nextDay)}>
                 <span>
-                  <small>Next memory</small>
-                  {stampDate.format(asDate(next.memoryDate))}
+                  <small>Next day</small>
+                  {stampDate.format(asDate(nextDay.memoryDate))}
                 </span>
                 <ChevronRight size={18} aria-hidden="true" />
               </button>
