@@ -83,8 +83,7 @@ export function CalendarView({ entries, onSelectEntry }: CalendarViewProps) {
         </div>
       </header>
 
-      <div className="calendar-scroll" tabIndex={0} aria-label={`Scrollable calendar for ${monthTitle.format(visibleMonth)}`}>
-      <div className="calendar-grid">
+      <div className="calendar-grid" aria-label={`Calendar for ${monthTitle.format(visibleMonth)}`}>
         {weekdays.map((weekday) => (
           <div className="calendar-weekday" key={weekday}>
             <span aria-hidden="true">{weekday}</span>
@@ -132,7 +131,6 @@ export function CalendarView({ entries, onSelectEntry }: CalendarViewProps) {
             </div>
           );
         })}
-      </div>
       </div>
     </section>
   );

@@ -54,15 +54,6 @@
   box-shadow: var(--shadow-paper);
 }
 
-.calendar-scroll {
-  border-radius: 24px;
-}
-
-.calendar-scroll:focus-visible {
-  outline: 3px solid var(--berry);
-  outline-offset: 4px;
-}
-
 .calendar-weekday {
   min-width: 0;
   padding: 15px 4px 13px;
@@ -206,63 +197,59 @@
 }
 
 @media (max-width: 440px) {
-  .calendar-view {
-    overflow-x: hidden;
-  }
-
-  .calendar-scroll {
-    overflow-x: auto;
-    padding-bottom: 8px;
-    border-radius: 14px;
-    overscroll-behavior-inline: contain;
-  }
-
   .calendar-grid {
-    min-width: 630px;
+    width: 100%;
+    min-width: 0;
     border-radius: 14px;
   }
 
   .calendar-weekday {
-    padding: 11px 1px;
-    font-size: 0.58rem;
+    padding: 9px 0 8px;
+    font-size: 0.52rem;
     letter-spacing: 0;
   }
 
   .calendar-day {
-    min-height: 68px;
+    min-height: clamp(48px, 14vw, 56px);
   }
 
   .calendar-day-number {
-    top: 4px;
-    left: 4px;
-    min-width: 21px;
-    height: 21px;
-    font-size: 0.62rem;
+    top: 2px;
+    left: 2px;
+    min-width: 18px;
+    height: 18px;
+    font-size: 0.56rem;
   }
 
   .calendar-memory-button {
-    inset: 3px;
-    padding: 2px 2px 7px;
+    inset: 2px;
+    min-height: 0;
+    padding: 1px 1px 5px;
     border-radius: 4px;
   }
 
   .calendar-memory-button::after {
-    inset: 2px 2px 7px;
+    inset: 1px 1px 5px;
   }
 
   .calendar-today-label {
     right: 3px;
     bottom: 3px;
-    padding: 2px 3px;
-    font-size: 0.46rem;
+    width: 7px;
+    height: 7px;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    background: var(--berry);
+    font-size: 0;
   }
 
   .calendar-entry-count {
-    left: 4px;
-    bottom: 4px;
-    min-width: 20px;
-    min-height: 20px;
-    font-size: 0.55rem;
+    left: 2px;
+    bottom: 2px;
+    min-width: 17px;
+    min-height: 17px;
+    font-size: 0.48rem;
   }
 }
 

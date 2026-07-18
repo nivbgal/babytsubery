@@ -30,6 +30,9 @@
 
 html {
   min-width: 320px;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-x: clip;
   background: var(--parchment);
   scroll-behavior: smooth;
 }
@@ -37,12 +40,29 @@ html {
 body {
   margin: 0;
   min-width: 320px;
+  max-width: 100%;
   min-height: 100vh;
+  overflow-x: hidden;
+  overflow-x: clip;
   color: var(--ink);
   background:
     radial-gradient(circle at 12% 8%, rgba(233, 190, 192, 0.28), transparent 30rem),
     radial-gradient(circle at 88% 82%, rgba(220, 210, 236, 0.24), transparent 28rem),
     var(--parchment);
+}
+
+#root {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+img,
+video,
+svg {
+  max-width: 100%;
 }
 
 button,
@@ -323,10 +343,6 @@ p {
 }
 
 @media (max-width: 620px) {
-  html {
-    overflow-x: hidden;
-  }
-
   .app-shell {
     width: 100%;
     min-height: 100vh;
