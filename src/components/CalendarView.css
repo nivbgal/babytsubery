@@ -1,0 +1,226 @@
+.calendar-view {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  margin-bottom: clamp(26px, 4vw, 44px);
+}
+
+.calendar-header h1 {
+  margin: 0;
+  color: var(--berry-deep);
+  font-size: clamp(2.4rem, 4.8vw, 5rem);
+  line-height: 1;
+}
+
+.calendar-month-controls {
+  display: grid;
+  grid-template-columns: 44px minmax(150px, auto) 44px;
+  align-items: center;
+  gap: 8px;
+}
+
+.calendar-month-controls button {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--berry);
+  background: var(--paper-strong);
+}
+
+.calendar-month-controls p {
+  margin: 0;
+  color: var(--berry-deep);
+  font-family: "Libre Caslon Display", Georgia, serif;
+  font-size: 1.25rem;
+  text-align: center;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: rgba(255, 253, 249, 0.54);
+  box-shadow: var(--shadow-paper);
+}
+
+.calendar-weekday {
+  min-width: 0;
+  padding: 15px 4px 13px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.calendar-day {
+  position: relative;
+  min-width: 0;
+  min-height: clamp(96px, 11vw, 152px);
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 250, 244, 0.38);
+}
+
+.calendar-day:nth-child(7n) {
+  border-right: 0;
+}
+
+.calendar-day-blank {
+  background: rgba(233, 190, 192, 0.08);
+}
+
+.calendar-day-number {
+  position: absolute;
+  z-index: 2;
+  top: 8px;
+  left: 9px;
+  min-width: 25px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--muted);
+  background: rgba(255, 253, 249, 0.83);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.calendar-memory-button {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+}
+
+.calendar-memory-button .memory-visual {
+  min-height: 100%;
+  transition: filter 180ms ease-out, transform 220ms ease-out;
+}
+
+.calendar-memory-button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(71, 24, 39, 0.19), transparent 55%);
+  pointer-events: none;
+}
+
+.calendar-memory-button:hover .memory-visual {
+  filter: saturate(1.04) contrast(1.03);
+  transform: scale(1.025);
+}
+
+.calendar-today-label {
+  position: absolute;
+  z-index: 3;
+  right: 6px;
+  bottom: 6px;
+  padding: 4px 6px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  color: var(--berry);
+  background: var(--paper-strong);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.calendar-day.is-today {
+  box-shadow: inset 0 0 0 2px var(--berry);
+}
+
+.calendar-entry-count {
+  position: absolute;
+  z-index: 3;
+  left: 8px;
+  bottom: 8px;
+  min-width: 25px;
+  min-height: 25px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--paper);
+  background: var(--berry);
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+@media (max-width: 680px) {
+  .calendar-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .calendar-month-controls {
+    width: 100%;
+    grid-template-columns: 44px 1fr 44px;
+  }
+
+  .calendar-day {
+    min-height: 82px;
+  }
+}
+
+@media (max-width: 440px) {
+  .calendar-grid {
+    border-radius: 14px;
+  }
+
+  .calendar-weekday {
+    padding: 11px 1px;
+    font-size: 0.58rem;
+    letter-spacing: 0;
+  }
+
+  .calendar-day {
+    min-height: 68px;
+  }
+
+  .calendar-day-number {
+    top: 4px;
+    left: 4px;
+    min-width: 21px;
+    height: 21px;
+    font-size: 0.62rem;
+  }
+
+  .calendar-today-label {
+    right: 3px;
+    bottom: 3px;
+    padding: 2px 3px;
+    font-size: 0.46rem;
+  }
+
+  .calendar-entry-count {
+    left: 4px;
+    bottom: 4px;
+    min-width: 20px;
+    min-height: 20px;
+    font-size: 0.55rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calendar-memory-button .memory-visual {
+    transition: none;
+  }
+}

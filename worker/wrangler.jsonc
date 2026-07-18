@@ -1,0 +1,26 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "baby-tsubery-api",
+  "main": "index.ts",
+  "compatibility_date": "2025-07-18",
+  "workers_dev": true,
+  "vars": {
+    "JOURNAL_NICKNAME": "Our little one"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "baby-tsubery",
+      // Replace this valid-shaped placeholder with the ID returned by:
+      // npx wrangler d1 create baby-tsubery
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "PHOTOS",
+      "bucket_name": "baby-tsubery-photos"
+    }
+  ]
+}

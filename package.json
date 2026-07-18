@@ -1,0 +1,36 @@
+{
+  "name": "baby-tsubery",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 3000",
+    "dev:api": "wrangler dev --config worker/wrangler.jsonc --local --port 8787",
+    "build": "tsc -b && vite build",
+    "build:api": "tsc -p worker/tsconfig.json --noEmit",
+    "test": "npm run build && npm run build:api && node --test tests/*.test.mjs",
+    "preview": "vite preview --host 0.0.0.0 --port 4173",
+    "deploy:api": "wrangler deploy --config worker/wrangler.jsonc",
+    "db:local": "wrangler d1 execute baby-tsubery --local --config worker/wrangler.jsonc --file worker/migrations/0001_initial.sql",
+    "db:remote": "wrangler d1 execute baby-tsubery --remote --config worker/wrangler.jsonc --file worker/migrations/0001_initial.sql",
+    "password:hash": "node scripts/hash-password.mjs"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "6.0.2",
+    "lucide-react": "^0.468.0",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "vite": "8.1.5"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20260718.1",
+    "@types/node": "22.19.19",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "typescript": "5.9.3",
+    "wrangler": "4.112.0"
+  }
+}
