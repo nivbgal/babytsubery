@@ -124,7 +124,7 @@ export function CalendarView({ entries, occasions, onSelectEntry }: CalendarView
                   <MemoryVisual entry={entry} thumbnail />
                   <span className="calendar-day-number">{day}</span>
                   {isToday && <span className="calendar-today-label">Today</span>}
-                  {dayOccasions.length > 0 && <span className="calendar-occasion-dot" title={dayOccasions.map((occasion) => occasion.title).join(", ")} aria-label={dayOccasions.map((occasion) => occasion.title).join(", ")} />}
+                  {dayOccasions.length > 0 && <span className="calendar-occasion-dot" role="img" title={dayOccasions.map((occasion) => occasion.title).join(", ")} aria-label={dayOccasions.map((occasion) => occasion.title).join(", ")} />}
                   {dayEntries.length > 1 && (
                     <span className="calendar-entry-count" aria-hidden="true">+{dayEntries.length - 1}</span>
                   )}

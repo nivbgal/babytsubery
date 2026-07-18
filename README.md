@@ -22,7 +22,7 @@ npm install
 npm run dev
 ```
 
-Without an API URL, the entry screen offers a demo preview. To run the private API locally as well:
+To run the private API locally as well:
 
 ```bash
 cp .env.example .env.local

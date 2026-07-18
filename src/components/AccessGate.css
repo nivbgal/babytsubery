@@ -191,8 +191,7 @@
 
 .access-gate__field-error { margin: 0; color: #982d4e; font-size: .85rem; line-height: 1.4; }
 
-.access-gate__submit,
-.access-gate__demo {
+.access-gate__submit {
   min-height: 48px;
   display: inline-flex;
   align-items: center;
@@ -211,13 +210,6 @@
 }
 
 .access-gate__submit:disabled { cursor: not-allowed; opacity: .58; box-shadow: none; }
-
-.access-gate__demo {
-  margin-top: 15px;
-  border: 1px solid rgba(110, 40, 63, .18);
-  color: var(--berry, #6e283f);
-  background: rgba(220, 210, 236, .25);
-}
 
 .access-gate__privacy {
   display: flex;
