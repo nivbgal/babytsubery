@@ -112,7 +112,13 @@ export default function App() {
   async function uploadMemory(formData: FormData) {
     if (demoMode) throw new Error("Uploads become available when the private Cloudflare service is connected.");
     await api.uploadMemory(formData);
-    await loadJournal();
+    try {
+      await loadJournal();
+    } catch {
+      // The photo is already safely stored. Retry the view refresh without
+      // reporting the completed upload as a failure to the parents.
+      window.setTimeout(() => { void loadJournal().catch(() => undefined); }, 1200);
+    }
   }
 
   async function saveAlbum(album: Pick<Album, "title" | "description" | "entryIds">) {
