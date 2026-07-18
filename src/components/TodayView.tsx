@@ -64,8 +64,8 @@ export function TodayView({ entries, currentEntry, nickname, onSelectEntry }: To
           A beautiful beginning for {nickname || "your little one"}
         </h1>
         <p>
-          When the parents add the first photograph, it will become the opening page of this
-          private family journal.
+          When Noa &amp; Rotem add the first photograph, it will become the opening page of this
+          little journal.
         </p>
       </section>
     );

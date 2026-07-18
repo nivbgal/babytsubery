@@ -165,7 +165,7 @@ export default function App() {
   }
 
   if (booting) {
-    return <main className="status-message" role="status">Opening the private family journal…</main>;
+    return <main className="status-message" role="status">Opening Noa &amp; Rotem’s journal…</main>;
   }
 
   if (role === "anonymous") {
@@ -184,7 +184,7 @@ export default function App() {
     <div className="app-shell">
       <header className="site-header no-print">
         <div>
-          <p className="brand-kicker">Our private family journal</p>
+          <p className="brand-kicker">A little life, day by day</p>
           <p className="brand-title">Welcome to the World,<br />Baby Tsubery</p>
         </div>
 

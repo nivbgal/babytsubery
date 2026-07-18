@@ -484,7 +484,7 @@ export function ParentStudio({ isOpen, memories, occasions, initialSection = "me
                 <div className="studio-access__icon"><KeyRound size={23} aria-hidden="true" /></div>
                 <p className="parent-studio__date-stamp">Noa &amp; Rotem</p>
                 <h3>Change the parent password</h3>
-                <p>One shared password keeps the parents’ studio private.</p>
+                <p>One shared password keeps Noa &amp; Rotem’s studio private.</p>
                 <form className="studio-password-form" onSubmit={submitPassword}>
                   <label className="studio-field">Current password<input type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} autoComplete="current-password" required disabled={isChangingPassword} /></label>
                   <label className="studio-field">New password<input type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} autoComplete="new-password" minLength={12} required disabled={isChangingPassword} /></label>

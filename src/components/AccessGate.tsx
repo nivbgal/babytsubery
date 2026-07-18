@@ -40,9 +40,9 @@ export function AccessGate({
 
   const inviteMessage =
     guestInviteState === "invalid"
-      ? "This family invitation isn’t valid. Ask the parents for a fresh link."
+      ? "This family invitation isn’t valid. Ask Noa & Rotem for a fresh link."
       : guestInviteState === "expired"
-        ? "This family invitation has expired. Ask the parents for a new one."
+        ? "This family invitation has expired. Ask Noa & Rotem for a new one."
         : "";
 
   return (
@@ -61,7 +61,7 @@ export function AccessGate({
           <div className="access-gate__mark" aria-hidden="true">
             <ShieldCheck size={22} />
           </div>
-          <p className="access-gate__eyebrow">Private family journal</p>
+          <p className="access-gate__eyebrow">A little life, day by day</p>
           <h1 id="access-title">Welcome to the World, Baby Tsubery</h1>
           <p className="access-gate__intro">
             A quiet place for loved ones to follow her story. Family guests enter automatically from their private invitation link.
@@ -81,7 +81,7 @@ export function AccessGate({
             </div>
           )}
 
-          <div className="access-gate__divider" aria-hidden="true"><span>Parents</span></div>
+          <div className="access-gate__divider" aria-hidden="true"><span>Noa &amp; Rotem</span></div>
 
           <form className="access-gate__form" onSubmit={handleSubmit}>
             <label htmlFor={passwordId}>Parent password</label>
