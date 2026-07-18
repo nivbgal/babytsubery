@@ -101,7 +101,6 @@ export function ParentStudio({ isOpen, memories, onClose, onUpload, onSaveAlbum,
   const [previewUrl, setPreviewUrl] = useState("");
   const [memoryDate, setMemoryDate] = useState(localToday);
   const [caption, setCaption] = useState("");
-  const [imageAlt, setImageAlt] = useState("");
   const [uploadError, setUploadError] = useState("");
   const [isUploading, setIsUploading] = useState(false);
 
@@ -163,8 +162,8 @@ export function ParentStudio({ isOpen, memories, onClose, onUpload, onSaveAlbum,
 
   async function submitMemory(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!photo || !memoryDate || !imageAlt.trim() || isUploading) {
-      setUploadError("Choose a photograph and add its date and image description.");
+    if (!photo || !memoryDate || isUploading) {
+      setUploadError("Choose a photograph and add its date.");
       return;
     }
     setUploadError("");
@@ -175,11 +174,9 @@ export function ParentStudio({ isOpen, memories, onClose, onUpload, onSaveAlbum,
       formData.append("image", prepared);
       formData.append("memoryDate", memoryDate);
       formData.append("caption", caption.trim());
-      formData.append("imageAlt", imageAlt.trim());
       await onUpload(formData);
       selectPhoto(null);
       setCaption("");
-      setImageAlt("");
       setMemoryDate(localToday());
     } catch (error) {
       setUploadError(readableError(error, "We couldn’t add this memory. Please try again."));
@@ -270,7 +267,7 @@ export function ParentStudio({ isOpen, memories, onClose, onUpload, onSaveAlbum,
                     disabled={isUploading}
                   />
                   {previewUrl ? (
-                    <img src={previewUrl} alt={imageAlt.trim() || "Selected photograph preview"} />
+                    <img src={previewUrl} alt="Selected photograph preview" />
                   ) : (
                     <span><ImagePlus size={30} strokeWidth={1.5} aria-hidden="true" /><strong>Choose a photograph</strong><small>JPEG, PNG, WebP, or a supported phone photo</small></span>
                   )}
@@ -286,7 +283,6 @@ export function ParentStudio({ isOpen, memories, onClose, onUpload, onSaveAlbum,
                 <div className="studio-form__grid">
                   <label className="studio-field">Date <input type="date" value={memoryDate} onChange={(event) => setMemoryDate(event.target.value)} required disabled={isUploading} /></label>
                   <label className="studio-field studio-field--wide">Caption <span>(optional)</span><textarea value={caption} onChange={(event) => setCaption(event.target.value)} rows={3} maxLength={500} placeholder="The softest afternoon light…" disabled={isUploading} /></label>
-                  <label className="studio-field studio-field--wide">Image description <span>(for family members using screen readers)</span><input value={imageAlt} onChange={(event) => setImageAlt(event.target.value)} maxLength={240} placeholder="Baby resting beneath a pink knitted blanket" required disabled={isUploading} /></label>
                 </div>
               </div>
 

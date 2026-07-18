@@ -250,6 +250,8 @@ async function createEntry(request: Request, env: Env): Promise<Response> {
   const extension = extensionFor(image.type);
   const key = `entries/${id}.${extension}`;
   const createdAt = new Date().toISOString();
+  const cleanedCaption = cleanOptional(caption);
+  const generatedAlt = cleanOptional(alt) || cleanedCaption || "Baby Tsubery daily photograph";
   await env.PHOTOS.put(key, image.stream(), {
     httpMetadata: { contentType: image.type, cacheControl: "private, max-age=86400" },
     customMetadata: { entryId: id },
@@ -257,7 +259,7 @@ async function createEntry(request: Request, env: Env): Promise<Response> {
   try {
     await env.DB.prepare(
       "INSERT INTO entries (id, memory_date, caption, image_key, image_type, image_alt, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    ).bind(id, memoryDate, cleanOptional(caption), key, image.type, cleanOptional(alt) || "A treasured baby memory", createdAt).run();
+    ).bind(id, memoryDate, cleanedCaption, key, image.type, generatedAlt, createdAt).run();
   } catch (error) {
     await env.PHOTOS.delete(key);
     throw error;
