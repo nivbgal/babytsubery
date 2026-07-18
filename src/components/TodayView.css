@@ -265,10 +265,6 @@
 }
 
 @media (max-width: 520px) {
-  .today-photo {
-    min-height: 360px;
-  }
-
   .today-date-stamp {
     right: 6px;
   }
@@ -280,6 +276,52 @@
   .today-caption {
     font-size: clamp(1.75rem, 9vw, 2.65rem);
   }
+}
+
+@media (max-width: 620px) {
+  .today-spread {
+    gap: 14px;
+    align-content: start;
+  }
+
+  .today-photo-mat {
+    width: min(92%, 480px);
+    padding: 10px 10px 34px;
+  }
+
+  .today-photo {
+    height: clamp(280px, 44dvh, 380px);
+    min-height: 0;
+    aspect-ratio: auto;
+  }
+
+  .today-tape {
+    top: -8px;
+    width: 94px;
+    height: 25px;
+  }
+
+  .today-copy {
+    width: 92%;
+    padding: 10px 0 0;
+  }
+
+  .today-caption {
+    font-size: clamp(1.55rem, 7vw, 2rem);
+    line-height: 1.15;
+  }
+
+  .today-entry-nav {
+    margin-top: 16px;
+  }
+}
+
+@media (max-width: 620px) and (max-height: 720px) {
+  .today-spread { gap: 10px; }
+  .today-photo-mat { padding-bottom: 28px; }
+  .today-photo { height: clamp(220px, 38dvh, 280px); }
+  .today-copy { padding-top: 8px; }
+  .today-caption { font-size: clamp(1.45rem, 6.5vw, 1.8rem); }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -34,3 +34,18 @@ test("authentication transitions reset Safari's retained login scroll", async ()
   assert.match(app, /afterKeyboardCloses/);
   assert.match(app, /document\.documentElement\.scrollTop = 0/);
 });
+
+test("mobile Today view fits short memories into the dynamic viewport", async () => {
+  const todayCss = await readFile(new URL("../src/components/TodayView.css", import.meta.url), "utf8");
+  assert.match(todayCss, /height: clamp\(280px, 44dvh, 380px\)/);
+  assert.match(todayCss, /max-height: 720px/);
+  assert.match(todayCss, /height: clamp\(220px, 38dvh, 280px\)/);
+});
+
+test("Apple share and install metadata use the branded icon", async () => {
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  const manifest = JSON.parse(await readFile(new URL("../public/site.webmanifest", import.meta.url), "utf8"));
+  assert.match(html, /rel="apple-touch-icon" sizes="180x180" href="\/apple-touch-icon\.png"/);
+  assert.match(html, /rel="manifest" href="\/site\.webmanifest"/);
+  assert.deepEqual(manifest.icons.map(({ sizes }) => sizes), ["192x192", "512x512"]);
+});

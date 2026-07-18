@@ -397,7 +397,7 @@ p {
   }
 
   .view-container {
-    padding: 22px 16px calc(92px + env(safe-area-inset-bottom));
+    padding: 14px 16px calc(82px + env(safe-area-inset-bottom));
   }
 }
 
