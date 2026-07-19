@@ -138,3 +138,41 @@ test("Apple home-screen icon is full-bleed and cache-busted", async () => {
   assert.doesNotMatch(iconSource, /rx=/);
   assert.match(html, /apple-touch-icon\.png\?v=2/);
 });
+
+test("moments use distinct icons, readable calendar badges, and a post-save confirmation flow", async () => {
+  const badge = await readFile(new URL("../src/components/OccasionBadge.tsx", import.meta.url), "utf8");
+  const calendar = await readFile(new URL("../src/components/CalendarView.tsx", import.meta.url), "utf8");
+  const app = await readFile(new URL("../src/App.tsx", import.meta.url), "utf8");
+  assert.match(badge, /CakeSlice/);
+  assert.match(badge, /PartyPopper/);
+  assert.match(badge, /Sparkles/);
+  assert.match(badge, /Star/);
+  assert.match(calendar, /calendar-occasion-trigger/);
+  assert.match(calendar, /calendar-moment-card/);
+  assert.match(app, /setView\("calendar"\)/);
+  assert.match(app, /setStudioOpen\(false\)/);
+  assert.match(app, /setToast\(/);
+});
+
+test("matching moments are rendered inside interactive and printed album pages", async () => {
+  const albums = await readFile(new URL("../src/components/AlbumsView.tsx", import.meta.url), "utf8");
+  assert.match(albums, /function AlbumMomentNotes/);
+  assert.match(albums, /occasionsByDate\.get\(entry\.memoryDate\)/);
+  assert.match(albums, /className="album-print-document"/);
+});
+
+test("memory uploads provide touch crop, reposition, zoom, rotation, reset, and iPhone-safe export", async () => {
+  const editor = await readFile(new URL("../src/components/PhotoCropEditor.tsx", import.meta.url), "utf8");
+  const editorCss = await readFile(new URL("../src/components/PhotoCropEditor.css", import.meta.url), "utf8");
+  const studio = await readFile(new URL("../src/components/ParentStudio.tsx", import.meta.url), "utf8");
+  assert.match(editor, /onPointerMove/);
+  assert.match(editor, /pinch/);
+  assert.match(editor, /type="range"/);
+  assert.match(editor, /Rotate/);
+  assert.match(editor, /Reset framing/);
+  assert.match(editor, /aspect: "original"/);
+  assert.match(editorCss, /touch-action: none/);
+  assert.match(studio, /await preparePhoto\(file\)/);
+  assert.match(studio, /renderCroppedPhoto\(photo, photoCrop\)/);
+  assert.match(studio, /accept="image\/\*,\.heic,\.heif"/);
+});

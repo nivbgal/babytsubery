@@ -179,6 +179,8 @@
   font-size: 0.65rem;
   font-weight: 800;
 }
+.calendar-day.has-occasion .calendar-entry-count { bottom: 41px; }
+.calendar-day.has-occasion .calendar-today-label { top: 7px; right: 7px; bottom: auto; }
 
 .calendar-occasion {
   position: absolute;
@@ -205,6 +207,53 @@
 .calendar-occasion__mark { color: var(--gold); }
 
 .calendar-occasion-dot { display: none; }
+
+.calendar-occasion-trigger {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  left: 6px;
+  z-index: 6;
+  min-width: 0;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 7px;
+  overflow: hidden;
+  border: 1px solid rgba(181, 134, 63, .38);
+  border-radius: 9px;
+  color: #76501d;
+  background: rgba(255, 248, 221, .96);
+  box-shadow: 0 4px 12px rgba(71, 24, 39, .12);
+  font-size: .62rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.calendar-occasion-trigger[data-type="birthday"] { color: #8e2948; border-color: rgba(142,41,72,.3); background: rgba(255,231,236,.97); }
+.calendar-occasion-trigger[data-type="celebration"] { color: #6b4b13; background: rgba(255,244,207,.97); }
+.calendar-occasion-trigger[data-type="milestone"] { color: #5d4775; border-color: rgba(93,71,117,.28); background: rgba(239,233,250,.97); }
+.calendar-occasion-trigger[data-type="custom"] { color: #526047; border-color: rgba(82,96,71,.28); background: rgba(238,242,229,.97); }
+.calendar-occasion-trigger svg { flex: 0 0 auto; }
+.calendar-occasion-trigger span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.calendar-occasion-trigger b { margin-left: auto; font-size: .58rem; }
+
+.calendar-moment-backdrop { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 18px; background: rgba(52,38,41,.48); backdrop-filter: blur(6px); }
+.calendar-moment-card { width: min(520px,100%); max-height: calc(100dvh - 36px); overflow-y: auto; border: 1px solid var(--line); border-radius: 24px; background: var(--paper-strong); box-shadow: 0 28px 80px rgba(71,24,39,.24); }
+.calendar-moment-card > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 24px 26px 20px; border-bottom: 1px solid var(--line); }
+.calendar-moment-card > header p { margin: 0 0 4px; color: var(--rose); font-size: .68rem; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+.calendar-moment-card > header h2 { margin: 0; color: var(--berry-deep); font-size: 2rem; font-weight: 400; }
+.calendar-moment-card > header button { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; color: var(--berry); background: var(--paper); }
+.calendar-moment-list { display: grid; gap: 12px; padding: 22px 26px 26px; }
+.calendar-moment-list article { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: start; gap: 13px; padding: 15px; border: 1px solid var(--line); border-radius: 15px; background: rgba(255,250,244,.72); }
+.calendar-moment-icon { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; color: var(--berry); background: rgba(233,190,192,.28); }
+.calendar-moment-list article[data-type="milestone"] .calendar-moment-icon { color: #5d4775; background: rgba(220,210,236,.5); }
+.calendar-moment-list article[data-type="celebration"] .calendar-moment-icon { color: #76501d; background: rgba(255,231,161,.42); }
+.calendar-moment-list article[data-type="custom"] .calendar-moment-icon { color: #526047; background: rgba(123,128,107,.18); }
+.calendar-moment-list small { color: var(--rose); font-size: .62rem; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+.calendar-moment-list h3 { margin: 3px 0 0; color: var(--berry-deep); font-family: "Libre Caslon Display",Georgia,serif; font-size: 1.35rem; font-weight: 400; }
+.calendar-moment-list p { margin: 7px 0 0; color: var(--muted); line-height: 1.5; white-space: pre-wrap; }
+.calendar-moment-list article > button { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; color: var(--berry); background: var(--paper-strong); }
 
 @media (max-width: 680px) {
   .calendar-header {
@@ -277,6 +326,8 @@
     min-height: 17px;
     font-size: 0.48rem;
   }
+  .calendar-day.has-occasion .calendar-entry-count { bottom: 2px; }
+  .calendar-day.has-occasion .calendar-today-label { top: 3px; right: 3px; bottom: auto; left: auto; }
 
   .calendar-occasion {
     right: 2px;
@@ -303,6 +354,25 @@
     border-radius: 50%;
     background: var(--gold);
   }
+
+  .calendar-occasion-trigger {
+    right: 3px;
+    bottom: 3px;
+    left: auto;
+    width: 27px;
+    min-height: 27px;
+    justify-content: center;
+    padding: 0;
+    border-radius: 50%;
+  }
+  .calendar-occasion-trigger span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+  .calendar-occasion-trigger b { position: absolute; top: -7px; right: -5px; min-width: 16px; height: 16px; display: grid; place-items: center; margin: 0; border-radius: 999px; color: #fff; background: var(--berry); font-size: .48rem; }
+}
+
+@media (max-width: 620px) {
+  .calendar-moment-backdrop { align-items: end; padding: 0; }
+  .calendar-moment-card { max-height: 88dvh; border-radius: 22px 22px 0 0; }
+  .calendar-moment-card > header, .calendar-moment-list { padding-inline: 18px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

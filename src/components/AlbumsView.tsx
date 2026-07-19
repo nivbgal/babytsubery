@@ -1,12 +1,14 @@
 import { ArrowLeft, BookHeart, ChevronLeft, ChevronRight, Pencil, Plus, Printer } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { MemoryVisual } from "./MemoryVisual";
-import type { Album, AlbumPage, MemoryEntry, Role } from "../types";
+import { OccasionTypeIcon } from "./OccasionBadge";
+import type { Album, AlbumPage, MemoryEntry, Occasion, Role } from "../types";
 import "./AlbumsView.css";
 
 export interface AlbumsViewProps {
   albums: Album[];
   entries: MemoryEntry[];
+  occasions: Occasion[];
   role: Role;
   onCreateAlbum: () => void;
   onEditAlbum: (album: Album) => void;
@@ -45,25 +47,31 @@ function AlbumCoverPage({ album, coverEntry, albumEntries }: { album: Album; cov
   );
 }
 
-function PhotoWithCaption({ entry }: { entry: MemoryEntry }) {
+function AlbumMomentNotes({ occasions }: { occasions: Occasion[] }) {
+  if (!occasions.length) return null;
+  return <div className="album-photo-moments">{occasions.map((occasion) => <span data-type={occasion.type} key={occasion.id}><OccasionTypeIcon type={occasion.type} size={12} /><b dir="auto">{occasion.title}</b></span>)}</div>;
+}
+
+function PhotoWithCaption({ entry, occasions }: { entry: MemoryEntry; occasions: Occasion[] }) {
   return (
     <figure className="album-designed-photo">
       <MemoryVisual entry={entry} />
       <figcaption dir="auto">
         {entry.caption && <span>{entry.caption}</span>}
+        <AlbumMomentNotes occasions={occasions} />
         <time dateTime={entry.memoryDate}>{readingDate.format(asDate(entry.memoryDate))}</time>
       </figcaption>
     </figure>
   );
 }
 
-function AlbumDesignedPage({ page, entries, pageNumber }: { page: AlbumPage; entries: MemoryEntry[]; pageNumber: number }) {
+function AlbumDesignedPage({ page, entries, pageNumber, occasionsByDate }: { page: AlbumPage; entries: MemoryEntry[]; pageNumber: number; occasionsByDate: Map<string, Occasion[]> }) {
   const primary = entries[0];
   return (
     <article className={`album-sheet album-designed-page album-designed-page--${page.layout}`} aria-label={`Album page ${pageNumber}`}>
       {page.layout === "duo" ? (
         <div className="album-duo-layout">
-          {entries.map((entry) => <PhotoWithCaption entry={entry} key={entry.id} />)}
+          {entries.map((entry) => <PhotoWithCaption entry={entry} occasions={occasionsByDate.get(entry.memoryDate) ?? []} key={entry.id} />)}
         </div>
       ) : page.layout === "full" && primary ? (
         <>
@@ -71,13 +79,14 @@ function AlbumDesignedPage({ page, entries, pageNumber }: { page: AlbumPage; ent
           <div className="album-full-copy">
             {page.title && <h3 className="display-type" dir="auto">{page.title}</h3>}
             {primary.caption && <p dir="auto">{primary.caption}</p>}
+            <AlbumMomentNotes occasions={occasionsByDate.get(primary.memoryDate) ?? []} />
             {page.text && <div dir="auto">{page.text}</div>}
             <time dateTime={primary.memoryDate}>{readingDate.format(asDate(primary.memoryDate))}</time>
           </div>
         </>
       ) : page.layout === "story" && primary ? (
         <div className="album-story-layout">
-          <PhotoWithCaption entry={primary} />
+          <PhotoWithCaption entry={primary} occasions={occasionsByDate.get(primary.memoryDate) ?? []} />
           <div className="album-story-copy">
             {page.title && <h3 className="display-type" dir="auto">{page.title}</h3>}
             {page.text ? <p dir="auto">{page.text}</p> : <p className="album-story-copy__quiet">A little moment, held close.</p>}
@@ -86,7 +95,7 @@ function AlbumDesignedPage({ page, entries, pageNumber }: { page: AlbumPage; ent
       ) : primary ? (
         <div className="album-classic-layout">
           {page.title && <h3 className="display-type" dir="auto">{page.title}</h3>}
-          <PhotoWithCaption entry={primary} />
+          <PhotoWithCaption entry={primary} occasions={occasionsByDate.get(primary.memoryDate) ?? []} />
           {page.text && <p className="album-classic-story" dir="auto">{page.text}</p>}
         </div>
       ) : null}
@@ -101,11 +110,16 @@ function AlbumDesignedPage({ page, entries, pageNumber }: { page: AlbumPage; ent
   );
 }
 
-export function AlbumsView({ albums, entries, role, onCreateAlbum, onEditAlbum }: AlbumsViewProps) {
+export function AlbumsView({ albums, entries, occasions, role, onCreateAlbum, onEditAlbum }: AlbumsViewProps) {
   const [openAlbumId, setOpenAlbumId] = useState<string | null>(null);
   const [pageIndex, setPageIndex] = useState(0);
   const [turnDirection, setTurnDirection] = useState<"next" | "previous">("next");
   const entriesById = useMemo(() => new Map(entries.map((entry) => [entry.id, entry])), [entries]);
+  const occasionsByDate = useMemo(() => {
+    const map = new Map<string, Occasion[]>();
+    occasions.forEach((occasion) => map.set(occasion.occasionDate, [...(map.get(occasion.occasionDate) ?? []), occasion]));
+    return map;
+  }, [occasions]);
   const openAlbum = albums.find((album) => album.id === openAlbumId) ?? null;
   const openEntries = openAlbum
     ? openAlbum.entryIds.map((id) => entriesById.get(id)).filter((entry): entry is MemoryEntry => Boolean(entry))
@@ -184,10 +198,10 @@ export function AlbumsView({ albums, entries, role, onCreateAlbum, onEditAlbum }
                 <AlbumCoverPage album={openAlbum} coverEntry={coverEntry} albumEntries={openEntries} />
               ) : currentSpread ? (
                 <div className="album-open-spread">
-                  <AlbumDesignedPage page={currentSpread[0].page} entries={currentSpread[0].entries} pageNumber={spreadFirstPage} />
+                  <AlbumDesignedPage page={currentSpread[0].page} entries={currentSpread[0].entries} pageNumber={spreadFirstPage} occasionsByDate={occasionsByDate} />
                   <div className="album-center-binding" aria-hidden="true" />
                   {currentSpread[1] ? (
-                    <AlbumDesignedPage page={currentSpread[1].page} entries={currentSpread[1].entries} pageNumber={spreadLastPage} />
+                    <AlbumDesignedPage page={currentSpread[1].page} entries={currentSpread[1].entries} pageNumber={spreadLastPage} occasionsByDate={occasionsByDate} />
                   ) : (
                     <article className="album-sheet album-blank-page" aria-hidden="true"><BookHeart size={27} /><p className="display-type">More little moments to come.</p></article>
                   )}
@@ -211,7 +225,7 @@ export function AlbumsView({ albums, entries, role, onCreateAlbum, onEditAlbum }
 
         <div className="album-print-document" aria-hidden="true">
           <AlbumCoverPage album={openAlbum} coverEntry={coverEntry} albumEntries={openEntries} />
-          {openPages.map(({ page, entries: pageEntries }, index) => <AlbumDesignedPage page={page} entries={pageEntries} pageNumber={index + 1} key={page.id} />)}
+          {openPages.map(({ page, entries: pageEntries }, index) => <AlbumDesignedPage page={page} entries={pageEntries} pageNumber={index + 1} occasionsByDate={occasionsByDate} key={page.id} />)}
         </div>
       </section>
     );

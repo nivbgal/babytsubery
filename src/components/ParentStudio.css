@@ -188,6 +188,9 @@
 .studio-photo-picker__action svg { flex: 0 0 auto; display: block; }
 
 .studio-photo-picker:focus-within { outline: 3px solid var(--berry, #6e283f); outline-offset: 3px; }
+.studio-replace-photo { min-height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top: 14px; padding: 0 14px; border: 1px solid rgba(110,40,63,.22); border-radius: 11px; color: var(--berry); background: var(--paper-strong); font-size: .8rem; font-weight: 800; cursor: pointer; }
+.studio-replace-photo input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.studio-replace-photo:focus-within { outline: 3px solid var(--berry); outline-offset: 3px; }
 .studio-form__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
 .studio-field {

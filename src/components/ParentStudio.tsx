@@ -19,6 +19,7 @@ import {
   X,
 } from "lucide-react";
 import type { Album, AlbumDraft, AlbumPage, AlbumPageLayout, MemoryEntry, Occasion, OccasionType } from "../types";
+import { defaultPhotoCrop, PhotoCropEditor, renderCroppedPhoto, type PhotoCropSettings } from "./PhotoCropEditor";
 import "./ParentStudio.css";
 
 export interface ParentStudioProps {
@@ -162,6 +163,8 @@ export function ParentStudio({ isOpen, memories, occasions, initialSection = "me
   const [caption, setCaption] = useState("");
   const [uploadError, setUploadError] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [isPreparingPhoto, setIsPreparingPhoto] = useState(false);
+  const [photoCrop, setPhotoCrop] = useState<PhotoCropSettings>(defaultPhotoCrop);
 
   const [albumTitle, setAlbumTitle] = useState("");
   const [albumDescription, setAlbumDescription] = useState("");
@@ -249,31 +252,44 @@ export function ParentStudio({ isOpen, memories, occasions, initialSection = "me
     }
   }
 
-  function selectPhoto(file: File | null) {
+  async function selectPhoto(file: File | null) {
     setUploadError("");
-    setPhoto(file);
+    setPhoto(null);
+    setPhotoCrop(defaultPhotoCrop);
     if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
-    const nextUrl = file ? URL.createObjectURL(file) : "";
-    previewUrlRef.current = nextUrl || null;
-    setPreviewUrl(nextUrl);
+    previewUrlRef.current = null;
+    setPreviewUrl("");
+    if (!file) return;
+    setIsPreparingPhoto(true);
+    try {
+      const prepared = await preparePhoto(file);
+      const nextUrl = URL.createObjectURL(prepared);
+      previewUrlRef.current = nextUrl;
+      setPhoto(prepared);
+      setPreviewUrl(nextUrl);
+    } catch (error) {
+      setUploadError(readableError(error, "We couldn’t open that photograph. Please choose it again."));
+    } finally {
+      setIsPreparingPhoto(false);
+    }
   }
 
   async function submitMemory(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!photo || !memoryDate || isUploading) {
+    if (!photo || !memoryDate || isUploading || isPreparingPhoto) {
       setUploadError("Choose a photograph and add its date.");
       return;
     }
     setUploadError("");
     setIsUploading(true);
     try {
-      const prepared = await preparePhoto(photo);
+      const prepared = await renderCroppedPhoto(photo, photoCrop);
       const formData = new FormData();
       formData.append("image", prepared);
       formData.append("memoryDate", memoryDate);
       formData.append("caption", caption.trim());
       await onUpload(formData);
-      selectPhoto(null);
+      await selectPhoto(null);
       setCaption("");
       setMemoryDate(localToday());
     } catch (error) {
@@ -510,20 +526,18 @@ export function ParentStudio({ isOpen, memories, occasions, initialSection = "me
                   <span className="studio-section__number">01</span>
                   <div><h3>Today’s photograph</h3><p>We resize it for the web and remove hidden location metadata before upload.</p></div>
                 </div>
-                <label className={`studio-photo-picker${previewUrl ? " studio-photo-picker--filled" : ""}`}>
-                  <input
-                    type="file"
-                    accept="image/*,.heic,.heif"
-                    onChange={(event) => selectPhoto(event.target.files?.[0] ?? null)}
-                    disabled={isUploading}
-                  />
-                  {previewUrl ? (
-                    <img src={previewUrl} alt="Selected photograph preview" />
-                  ) : (
-                    <span><ImagePlus size={30} strokeWidth={1.5} aria-hidden="true" /><strong>Choose a photograph</strong><small>JPEG, PNG, WebP, or iPhone HEIC/HEIF — converted securely</small></span>
-                  )}
-                  <span className="studio-photo-picker__action"><Upload size={17} aria-hidden="true" /> {previewUrl ? "Choose another" : "Browse photos"}</span>
-                </label>
+                {previewUrl && photo ? (
+                  <>
+                    <PhotoCropEditor file={photo} previewUrl={previewUrl} value={photoCrop} onChange={setPhotoCrop} disabled={isUploading} />
+                    <label className="studio-replace-photo"><input type="file" accept="image/*,.heic,.heif" onChange={(event) => void selectPhoto(event.target.files?.[0] ?? null)} disabled={isUploading || isPreparingPhoto} /><Upload size={17} aria-hidden="true" /> Choose another photograph</label>
+                  </>
+                ) : (
+                  <label className="studio-photo-picker">
+                    <input type="file" accept="image/*,.heic,.heif" onChange={(event) => void selectPhoto(event.target.files?.[0] ?? null)} disabled={isUploading || isPreparingPhoto} />
+                    <span>{isPreparingPhoto ? <LoaderCircle className="studio-spinner" size={30} aria-hidden="true" /> : <ImagePlus size={30} strokeWidth={1.5} aria-hidden="true" />}<strong>{isPreparingPhoto ? "Preparing photograph…" : "Choose a photograph"}</strong><small>JPEG, PNG, WebP, or iPhone HEIC/HEIF — converted securely</small></span>
+                    <span className="studio-photo-picker__action"><Upload size={17} aria-hidden="true" /> Browse photos</span>
+                  </label>
+                )}
               </div>
 
               <div className="studio-section">
@@ -538,7 +552,7 @@ export function ParentStudio({ isOpen, memories, occasions, initialSection = "me
               </div>
 
               {uploadError && <p className="studio-message studio-message--error" role="alert">{uploadError}</p>}
-              <button className="studio-primary" type="submit" disabled={isUploading}>
+              <button className="studio-primary" type="submit" disabled={isUploading || isPreparingPhoto}>
                 {isUploading ? <><LoaderCircle className="studio-spinner" size={19} aria-hidden="true" /> Preparing photograph…</> : <><Camera size={19} aria-hidden="true" /> Add this memory</>}
               </button>
             </form>

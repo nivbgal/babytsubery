@@ -6,6 +6,7 @@ import { CalendarView } from "./components/CalendarView";
 import { EditItemDialog, type EditableItem } from "./components/EditItemDialog";
 import { ParentStudio, type StudioSection } from "./components/ParentStudio";
 import { TodayView } from "./components/TodayView";
+import { OccasionTypeIcon, occasionTypeLabel } from "./components/OccasionBadge";
 import { api, apiConfigured } from "./lib/api";
 import type { Album, AlbumDraft, MemoryEntry, MemoryUpdate, Occasion, OccasionDraft, Role, ViewName } from "./types";
 import "./App.css";
@@ -43,6 +44,8 @@ export default function App() {
   const [showParentNote, setShowParentNote] = useState(false);
   const [editTarget, setEditTarget] = useState<EditableItem | null>(null);
   const [editingAlbum, setEditingAlbum] = useState<Album | null>(null);
+  const [calendarFocus, setCalendarFocus] = useState<{ date: string; version: number } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: Occasion["type"] } | null>(null);
 
   useLayoutEffect(() => {
     const previousRestoration = window.history.scrollRestoration;
@@ -64,6 +67,12 @@ export default function App() {
       window.clearTimeout(afterKeyboardCloses);
     };
   }, [role]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timeout = window.setTimeout(() => setToast(null), 4200);
+    return () => window.clearTimeout(timeout);
+  }, [toast]);
 
   function openStudio(section: StudioSection) {
     setEditingAlbum(null);
@@ -211,7 +220,18 @@ export default function App() {
 
   async function saveOccasion(occasion: Pick<Occasion, "occasionDate" | "title" | "description" | "type">) {
     await api.saveOccasion(occasion);
-    await loadJournal();
+    setCalendarFocus({ date: occasion.occasionDate, version: Date.now() });
+    setView("calendar");
+    setStudioOpen(false);
+    setToast({ message: `${occasionTypeLabel(occasion.type)} added to ${new Intl.DateTimeFormat(undefined, { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }).format(new Date(`${occasion.occasionDate}T12:00:00Z`))}.`, type: occasion.type });
+    resetPageScroll();
+    try {
+      await loadJournal();
+    } catch {
+      // The moment is already saved. Refresh quietly instead of showing a
+      // false failure while Noa or Rotem are looking at the calendar.
+      window.setTimeout(() => { void loadJournal().catch(() => undefined); }, 1200);
+    }
   }
 
   async function deleteOccasion(id: string) {
@@ -315,11 +335,13 @@ export default function App() {
         {view === "today" && (
           <TodayView entries={entries} currentEntry={selectedEntry} nickname={nickname} onSelectEntry={chooseEntry} canEdit={role === "parent"} onEdit={(entry) => setEditTarget({ kind: "memory", item: entry })} />
         )}
-        {view === "calendar" && <CalendarView entries={entries} occasions={occasions} onSelectEntry={chooseEntry} />}
+        {view === "calendar" && <CalendarView entries={entries} occasions={occasions} onSelectEntry={chooseEntry} focusDate={calendarFocus?.date} focusVersion={calendarFocus?.version} canEdit={role === "parent"} onEditOccasion={editOccasion} />}
         {view === "albums" && (
-          <AlbumsView albums={albums} entries={entries} role={role} onCreateAlbum={() => openStudio("album")} onEditAlbum={editAlbum} />
+          <AlbumsView albums={albums} entries={entries} occasions={occasions} role={role} onCreateAlbum={() => openStudio("album")} onEditAlbum={editAlbum} />
         )}
       </main>
+
+      {toast && <div className="app-toast no-print" role="status" aria-live="polite"><span><OccasionTypeIcon type={toast.type} size={18} /></span><p>{toast.message}</p><button type="button" onClick={() => setToast(null)} aria-label="Dismiss notification">×</button></div>}
 
       {role === "parent" && (
           <ParentStudio

@@ -1,6 +1,7 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight, Pencil, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { MemoryVisual } from "./MemoryVisual";
+import { OccasionTypeIcon, occasionSummary, occasionTypeLabel } from "./OccasionBadge";
 import type { MemoryEntry, Occasion } from "../types";
 import "./CalendarView.css";
 
@@ -8,6 +9,10 @@ export interface CalendarViewProps {
   entries: MemoryEntry[];
   occasions: Occasion[];
   onSelectEntry: (entry: MemoryEntry) => void;
+  focusDate?: string | null;
+  focusVersion?: number;
+  canEdit?: boolean;
+  onEditOccasion?: (occasion: Occasion) => void;
 }
 
 const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -37,7 +42,7 @@ function dateKey(year: number, month: number, day: number) {
   return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-export function CalendarView({ entries, occasions, onSelectEntry }: CalendarViewProps) {
+export function CalendarView({ entries, occasions, onSelectEntry, focusDate = null, focusVersion = 0, canEdit = false, onEditOccasion }: CalendarViewProps) {
   const latestDate = useMemo(
     () => [...entries].sort((a, b) => b.memoryDate.localeCompare(a.memoryDate))[0]?.memoryDate,
     [entries],
@@ -45,6 +50,20 @@ export function CalendarView({ entries, occasions, onSelectEntry }: CalendarView
   const [visibleMonth, setVisibleMonth] = useState(() =>
     latestDate ? monthFromDate(latestDate) : new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   );
+  const [openMoments, setOpenMoments] = useState<{ label: string; items: Occasion[] } | null>(null);
+
+  useEffect(() => {
+    if (focusDate) setVisibleMonth(monthFromDate(focusDate));
+  }, [focusDate, focusVersion]);
+
+  useEffect(() => {
+    if (!openMoments) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    function closeOnEscape(event: globalThis.KeyboardEvent) { if (event.key === "Escape") setOpenMoments(null); }
+    window.addEventListener("keydown", closeOnEscape);
+    return () => { document.body.style.overflow = previousOverflow; window.removeEventListener("keydown", closeOnEscape); };
+  }, [openMoments]);
 
   const year = visibleMonth.getFullYear();
   const month = visibleMonth.getMonth();
@@ -68,6 +87,7 @@ export function CalendarView({ entries, occasions, onSelectEntry }: CalendarView
   }, [occasions]);
 
   function moveMonth(offset: number) {
+    setOpenMoments(null);
     setVisibleMonth(new Date(year, month + offset, 1));
   }
 
@@ -111,7 +131,7 @@ export function CalendarView({ entries, occasions, onSelectEntry }: CalendarView
 
           return (
             <div
-              className={`calendar-day${isToday ? " is-today" : ""}${entry ? " has-memory" : ""}`}
+              className={`calendar-day${isToday ? " is-today" : ""}${entry ? " has-memory" : ""}${dayOccasions.length ? " has-occasion" : ""}`}
               key={key}
             >
               {entry ? (
@@ -124,7 +144,6 @@ export function CalendarView({ entries, occasions, onSelectEntry }: CalendarView
                   <MemoryVisual entry={entry} thumbnail />
                   <span className="calendar-day-number">{day}</span>
                   {isToday && <span className="calendar-today-label">Today</span>}
-                  {dayOccasions.length > 0 && <span className="calendar-occasion-dot" role="img" title={dayOccasions.map((occasion) => occasion.title).join(", ")} aria-label={dayOccasions.map((occasion) => occasion.title).join(", ")} />}
                   {dayEntries.length > 1 && (
                     <span className="calendar-entry-count" aria-hidden="true">+{dayEntries.length - 1}</span>
                   )}
@@ -133,14 +152,42 @@ export function CalendarView({ entries, occasions, onSelectEntry }: CalendarView
                 <>
                   <span className="calendar-day-number">{day}</span>
                   {isToday && <span className="calendar-today-label">Today</span>}
-                  {dayOccasions.map((occasion) => <span className="calendar-occasion" key={occasion.id}><span className="calendar-occasion__mark" aria-hidden="true">✦</span>{occasion.title}</span>)}
                   <span className="sr-only">{labelDate}, no entry</span>
                 </>
+              )}
+              {dayOccasions.length > 0 && (
+                <button
+                  className="calendar-occasion-trigger"
+                  type="button"
+                  data-type={dayOccasions[0].type}
+                  onClick={() => setOpenMoments({ label: labelDate, items: dayOccasions })}
+                  aria-label={`${occasionSummary(dayOccasions)} on ${labelDate}`}
+                >
+                  <OccasionTypeIcon type={dayOccasions[0].type} size={15} />
+                  <span dir="auto">{dayOccasions[0].title}</span>
+                  {dayOccasions.length > 1 && <b aria-label={`${dayOccasions.length - 1} more moments`}>+{dayOccasions.length - 1}</b>}
+                </button>
               )}
             </div>
           );
         })}
       </div>
+      {openMoments && (
+        <div className="calendar-moment-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setOpenMoments(null)}>
+          <section className="calendar-moment-card" role="dialog" aria-modal="true" aria-labelledby="calendar-moment-title">
+            <header><div><p>Marked with love</p><h2 id="calendar-moment-title" className="display-type">{openMoments.label}</h2></div><button type="button" onClick={() => setOpenMoments(null)} aria-label="Close moment details"><X aria-hidden="true" /></button></header>
+            <div className="calendar-moment-list">
+              {openMoments.items.map((occasion) => (
+                <article key={occasion.id} data-type={occasion.type}>
+                  <span className="calendar-moment-icon"><OccasionTypeIcon type={occasion.type} size={20} /></span>
+                  <div><small>{occasionTypeLabel(occasion.type)}</small><h3 dir="auto">{occasion.title}</h3>{occasion.description && <p dir="auto">{occasion.description}</p>}</div>
+                  {canEdit && onEditOccasion && <button type="button" onClick={() => { setOpenMoments(null); onEditOccasion(occasion); }} aria-label={`Edit ${occasion.title}`}><Pencil size={16} aria-hidden="true" /></button>}
+                </article>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
     </section>
   );
 }

@@ -48,3 +48,11 @@
 .parent-note p { margin: 0; font-family: "Libre Caslon Display", Georgia, serif; font-size: 1.05rem; line-height: 1.2; }
 
 @keyframes parent-note-arrive { from { opacity: 0; transform: translateY(-4px); } }
+
+.app-toast { position: fixed; z-index: 140; right: 22px; bottom: 22px; max-width: min(390px,calc(100% - 32px)); display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 11px; padding: 12px 13px; border: 1px solid rgba(110,40,63,.18); border-radius: 16px; color: var(--berry-deep); background: rgba(255,253,249,.97); box-shadow: 0 18px 46px rgba(71,24,39,.2); backdrop-filter: blur(10px); animation: app-toast-arrive 320ms cubic-bezier(.2,.8,.2,1) both; }
+.app-toast > span { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; color: var(--berry); background: rgba(233,190,192,.3); }
+.app-toast p { margin: 0; font-size: .85rem; font-weight: 700; line-height: 1.4; }
+.app-toast button { width: 36px; height: 36px; border: 0; border-radius: 50%; color: var(--muted); background: transparent; font-size: 1.35rem; }
+@keyframes app-toast-arrive { from { opacity: 0; transform: translateY(12px) scale(.97); } }
+@media (max-width:620px) { .app-toast { right: 16px; bottom: calc(82px + env(safe-area-inset-bottom)); left: 16px; max-width: none; } }
+@media (prefers-reduced-motion:reduce) { .app-toast { animation: none; } }
