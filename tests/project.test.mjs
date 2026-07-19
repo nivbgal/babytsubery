@@ -90,3 +90,9 @@ test("album creation stores explicit covers and parent-designed pages", async ()
   assert.match(migration, /cover_entry_id/);
   assert.match(migration, /pages_json/);
 });
+
+test("the private gift note is addressed to the whole family", async () => {
+  const app = await readFile(new URL("../src/App.tsx", import.meta.url), "utf8");
+  assert.match(app, /To Noa, Rotem, and Baby,/);
+  assert.match(app, /aria-label="red heart">❤️/);
+});

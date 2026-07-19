@@ -267,7 +267,7 @@ export default function App() {
           </button>
           {role === "parent" && showParentNote && (
             <div className="parent-note" id="parent-note" role="tooltip">
-              <p>To Noa and Rotem,<br /><br />With lots of love,<br /><br />Nivgal <span aria-label="red heart">❤️</span></p>
+              <p>To Noa, Rotem, and Baby,<br /><br />With lots of love,<br /><br />Nivgal <span aria-label="red heart">❤️</span></p>
             </div>
           )}
         </div>
