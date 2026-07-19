@@ -17,7 +17,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import type { Album, MemoryEntry, Occasion, OccasionType } from "../types";
+import type { AlbumDraft, AlbumPage, AlbumPageLayout, MemoryEntry, Occasion, OccasionType } from "../types";
 import "./ParentStudio.css";
 
 export interface ParentStudioProps {
@@ -27,7 +27,7 @@ export interface ParentStudioProps {
   initialSection?: StudioSection;
   onClose: () => void;
   onUpload: (formData: FormData) => Promise<void>;
-  onSaveAlbum: (album: Pick<Album, "title" | "description" | "entryIds">) => Promise<void>;
+  onSaveAlbum: (album: AlbumDraft) => Promise<void>;
   onRotateInvite: () => Promise<string>;
   onChangePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   onSaveOccasion: (occasion: Pick<Occasion, "occasionDate" | "title" | "description" | "type">) => Promise<void>;
@@ -136,6 +136,16 @@ function formatMemoryDate(value: string) {
   return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(date);
 }
 
+function newAlbumPage(entryIds: string[]): AlbumPage {
+  return {
+    id: crypto.randomUUID(),
+    entryIds,
+    layout: entryIds.length === 2 ? "duo" : "classic",
+    title: null,
+    text: null,
+  };
+}
+
 export function ParentStudio({ isOpen, memories, occasions, initialSection = "memory", onClose, onUpload, onSaveAlbum, onRotateInvite, onChangePassword, onSaveOccasion, onDeleteOccasion }: ParentStudioProps) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -153,6 +163,8 @@ export function ParentStudio({ isOpen, memories, occasions, initialSection = "me
   const [albumTitle, setAlbumTitle] = useState("");
   const [albumDescription, setAlbumDescription] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [coverEntryId, setCoverEntryId] = useState<string | null>(null);
+  const [albumPages, setAlbumPages] = useState<AlbumPage[]>([]);
   const [albumError, setAlbumError] = useState("");
   const [isSavingAlbum, setIsSavingAlbum] = useState(false);
 
@@ -260,16 +272,88 @@ export function ParentStudio({ isOpen, memories, occasions, initialSection = "me
       await onSaveAlbum({
         title: albumTitle.trim(),
         description: albumDescription.trim() || null,
+        coverEntryId,
         entryIds: selectedIds,
+        pages: albumPages.map((page) => ({
+          ...page,
+          title: page.title?.trim() || null,
+          text: page.text?.trim() || null,
+        })),
       });
       setAlbumTitle("");
       setAlbumDescription("");
       setSelectedIds([]);
+      setCoverEntryId(null);
+      setAlbumPages([]);
     } catch (error) {
       setAlbumError(readableError(error, "We couldn’t save this album. Please try again."));
     } finally {
       setIsSavingAlbum(false);
     }
+  }
+
+  function toggleAlbumMemory(memoryId: string) {
+    const selected = selectedIds.includes(memoryId);
+    if (selected) {
+      setSelectedIds((current) => current.filter((id) => id !== memoryId));
+      setCoverEntryId((current) => current === memoryId ? null : current);
+      setAlbumPages((current) => current
+        .map((page) => {
+          const entryIds = page.entryIds.filter((id) => id !== memoryId);
+          if (!entryIds.length) return null;
+          return { ...page, entryIds, layout: entryIds.length === 2 ? "duo" : page.layout === "duo" ? "classic" : page.layout };
+        })
+        .filter((page): page is AlbumPage => Boolean(page)));
+      return;
+    }
+
+    setSelectedIds((current) => [...current, memoryId]);
+    setAlbumPages((current) => {
+      const last = current[current.length - 1];
+      if (last && last.entryIds.length === 1 && !last.title && !last.text && last.layout === "classic") {
+        return [...current.slice(0, -1), { ...last, entryIds: [...last.entryIds, memoryId], layout: "duo" }];
+      }
+      return [...current, newAlbumPage([memoryId])];
+    });
+  }
+
+  function updateAlbumPage(index: number, updates: Partial<AlbumPage>) {
+    setAlbumPages((current) => current.map((page, pageIndex) => pageIndex === index ? { ...page, ...updates } : page));
+  }
+
+  function splitAlbumPage(index: number) {
+    setAlbumPages((current) => current.flatMap((page, pageIndex) => {
+      if (pageIndex !== index || page.entryIds.length !== 2) return [page];
+      return [
+        { ...page, entryIds: [page.entryIds[0]], layout: "classic" as const },
+        newAlbumPage([page.entryIds[1]]),
+      ];
+    }));
+  }
+
+  function joinAlbumPages(index: number) {
+    setAlbumPages((current) => {
+      const page = current[index];
+      const next = current[index + 1];
+      if (!page || !next || page.entryIds.length !== 1 || next.entryIds.length !== 1) return current;
+      const joined: AlbumPage = {
+        ...page,
+        entryIds: [page.entryIds[0], next.entryIds[0]],
+        layout: "duo",
+        text: [page.text, next.text].filter(Boolean).join("\n\n") || null,
+      };
+      return [...current.slice(0, index), joined, ...current.slice(index + 2)];
+    });
+  }
+
+  function moveAlbumPage(index: number, direction: -1 | 1) {
+    setAlbumPages((current) => {
+      const destination = index + direction;
+      if (destination < 0 || destination >= current.length) return current;
+      const next = [...current];
+      [next[index], next[destination]] = [next[destination], next[index]];
+      return next;
+    });
   }
 
   async function rotateInvite() {
@@ -359,6 +443,7 @@ export function ParentStudio({ isOpen, memories, occasions, initialSection = "me
       <div
         ref={dialogRef}
         className="parent-studio"
+        data-section={section}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -426,17 +511,17 @@ export function ParentStudio({ isOpen, memories, occasions, initialSection = "me
             <form className="studio-form" onSubmit={submitAlbum}>
               <div className="studio-section studio-section--lilac">
                 <div className="studio-section__heading">
-                  <span className="studio-section__number">Album</span>
-                  <div><h3>Gather a little chapter</h3><p>Choose a title, then collect the moments that belong together.</p></div>
+                  <span className="studio-section__number">01</span>
+                  <div><h3>Name this little chapter</h3><p>The title and introduction appear on the cover and opening page.</p></div>
                 </div>
                 <div className="studio-form__grid">
                   <label className="studio-field">Album title <input dir="auto" value={albumTitle} onChange={(event) => setAlbumTitle(event.target.value)} maxLength={120} required disabled={isSavingAlbum} /></label>
-                  <label className="studio-field studio-field--wide">Description <span>(optional)</span><textarea dir="auto" value={albumDescription} onChange={(event) => setAlbumDescription(event.target.value)} rows={3} maxLength={500} disabled={isSavingAlbum} /></label>
+                  <label className="studio-field studio-field--wide">Opening note <span>(optional)</span><textarea dir="auto" value={albumDescription} onChange={(event) => setAlbumDescription(event.target.value)} rows={3} maxLength={500} placeholder="A few words about this chapter…" disabled={isSavingAlbum} /></label>
                 </div>
               </div>
 
-              <fieldset className="studio-memory-list">
-                <legend>Choose memories <span>{selectedIds.length} selected</span></legend>
+              <fieldset className="studio-memory-list studio-album-step">
+                <legend><span className="studio-step-title"><b>02</b> Choose memories</span><span>{selectedIds.length} selected</span></legend>
                 {memories.length === 0 ? (
                   <p className="studio-empty">Add a daily memory first, then return here to make an album.</p>
                 ) : memories.map((memory) => {
@@ -446,15 +531,93 @@ export function ParentStudio({ isOpen, memories, occasions, initialSection = "me
                       <input
                         type="checkbox"
                         checked={selected}
-                        onChange={() => setSelectedIds((current) => selected ? current.filter((id) => id !== memory.id) : [...current, memory.id])}
+                        onChange={() => toggleAlbumMemory(memory.id)}
                         disabled={isSavingAlbum}
                       />
                       <span className="studio-memory-option__check">{selected && <Check size={15} aria-hidden="true" />}</span>
+                      <img src={memory.thumbUrl || memory.imageUrl} alt="" />
                       <span><strong>{formatMemoryDate(memory.memoryDate)}</strong><small>{memory.caption || "An untitled memory"}</small></span>
                     </label>
                   );
                 })}
               </fieldset>
+
+              {selectedIds.length > 0 && (
+                <fieldset className="studio-cover-picker studio-album-step">
+                  <legend><span className="studio-step-title"><b>03</b> Choose the cover</span><span>Optional</span></legend>
+                  <p className="studio-step-help">Pick the exact photograph you want, or keep the cover beautifully text-only.</p>
+                  <div className="studio-cover-options">
+                    <label className="studio-cover-option studio-cover-option--none">
+                      <input type="radio" name="album-cover" checked={coverEntryId === null} onChange={() => setCoverEntryId(null)} disabled={isSavingAlbum} />
+                      <span className="studio-cover-option__preview"><BookHeart size={25} aria-hidden="true" /></span>
+                      <span>Text-only cover</span>
+                    </label>
+                    {selectedIds.map((id) => {
+                      const memory = memories.find((item) => item.id === id);
+                      if (!memory) return null;
+                      return (
+                        <label className="studio-cover-option" key={id}>
+                          <input type="radio" name="album-cover" checked={coverEntryId === id} onChange={() => setCoverEntryId(id)} disabled={isSavingAlbum} />
+                          <span className="studio-cover-option__preview"><img src={memory.thumbUrl || memory.imageUrl} alt={memory.imageAlt} /></span>
+                          <span>{formatMemoryDate(memory.memoryDate)}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+              )}
+
+              {albumPages.length > 0 && (
+                <section className="studio-page-designer studio-album-step" aria-labelledby="album-pages-title">
+                  <div className="studio-page-designer__heading">
+                    <div><span className="studio-step-title"><b>04</b> Design the pages</span><p id="album-pages-title" className="studio-step-help">Two photographs share a page by default. Split them when one deserves its own page, then choose its layout and add more writing.</p></div>
+                    <span>{albumPages.length} {albumPages.length === 1 ? "page" : "pages"}</span>
+                  </div>
+                  <div className="studio-page-list">
+                    {albumPages.map((page, pageIndex) => {
+                      const pageMemories = page.entryIds.map((id) => memories.find((memory) => memory.id === id)).filter((memory): memory is MemoryEntry => Boolean(memory));
+                      const nextPage = albumPages[pageIndex + 1];
+                      const canJoinNext = page.entryIds.length === 1 && nextPage?.entryIds.length === 1 && !nextPage.title && !nextPage.text;
+                      return (
+                        <article className="studio-page-card" key={page.id}>
+                          <header>
+                            <strong>Page {pageIndex + 1}</strong>
+                            <div>
+                              <button type="button" onClick={() => moveAlbumPage(pageIndex, -1)} disabled={pageIndex === 0 || isSavingAlbum} aria-label={`Move page ${pageIndex + 1} earlier`}>↑</button>
+                              <button type="button" onClick={() => moveAlbumPage(pageIndex, 1)} disabled={pageIndex === albumPages.length - 1 || isSavingAlbum} aria-label={`Move page ${pageIndex + 1} later`}>↓</button>
+                            </div>
+                          </header>
+                          <div className={`studio-page-preview studio-page-preview--${page.layout}`}>
+                            {pageMemories.map((memory) => <img key={memory.id} src={memory.thumbUrl || memory.imageUrl} alt={memory.imageAlt} />)}
+                            {page.layout === "story" && <span aria-hidden="true" />}
+                          </div>
+                          {page.entryIds.length === 2 ? (
+                            <div className="studio-page-actions">
+                              <span>Side-by-side photographs with their captions</span>
+                              <button type="button" className="studio-secondary" onClick={() => splitAlbumPage(pageIndex)} disabled={isSavingAlbum}>Split into two pages</button>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="studio-layout-options" aria-label={`Layout for page ${pageIndex + 1}`}>
+                                {(["classic", "story", "full"] as AlbumPageLayout[]).map((layout) => (
+                                  <button type="button" key={layout} aria-pressed={page.layout === layout} onClick={() => updateAlbumPage(pageIndex, { layout })} disabled={isSavingAlbum}>
+                                    {layout === "classic" ? "Classic" : layout === "story" ? "Photo + story" : "Full photo"}
+                                  </button>
+                                ))}
+                              </div>
+                              {canJoinNext && <button type="button" className="studio-page-join" onClick={() => joinAlbumPages(pageIndex)} disabled={isSavingAlbum}>Put the next photograph on this page</button>}
+                            </>
+                          )}
+                          <div className="studio-page-copy-fields">
+                            <label className="studio-field">Page heading <span>(optional)</span><input dir="auto" value={page.title ?? ""} onChange={(event) => updateAlbumPage(pageIndex, { title: event.target.value || null })} maxLength={160} placeholder="A tiny adventure" disabled={isSavingAlbum} /></label>
+                            <label className="studio-field">More of the story <span>(optional)</span><textarea dir="auto" value={page.text ?? ""} onChange={(event) => updateAlbumPage(pageIndex, { text: event.target.value || null })} maxLength={2000} rows={4} placeholder="Write as much or as little as you’d like…" disabled={isSavingAlbum} /></label>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                </section>
+              )}
               {albumError && <p className="studio-message studio-message--error" role="alert">{albumError}</p>}
               <button className="studio-primary" type="submit" disabled={isSavingAlbum || memories.length === 0}>
                 {isSavingAlbum ? <><LoaderCircle className="studio-spinner" size={19} aria-hidden="true" /> Saving album…</> : <><BookHeart size={19} aria-hidden="true" /> Create album</>}

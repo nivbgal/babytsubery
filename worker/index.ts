@@ -38,7 +38,19 @@ interface AlbumRow {
   id: string;
   title: string;
   description: string | null;
+  cover_entry_id: string | null;
+  pages_json: string | null;
   created_at: string;
+}
+
+type AlbumPageLayout = "classic" | "story" | "full" | "duo";
+
+interface AlbumPagePayload {
+  id: string;
+  entryIds: string[];
+  layout: AlbumPageLayout;
+  title: string | null;
+  text: string | null;
 }
 
 interface OccasionRow {
@@ -218,7 +230,7 @@ async function getJournal(request: Request, env: Env): Promise<Response> {
     "SELECT id, memory_date, caption, image_key, image_alt, created_at FROM entries ORDER BY memory_date DESC, created_at DESC",
   ).all<EntryRow>();
   const albumsResult = await env.DB.prepare(
-    "SELECT id, title, description, created_at FROM albums ORDER BY created_at DESC",
+    "SELECT id, title, description, cover_entry_id, pages_json, created_at FROM albums ORDER BY created_at DESC",
   ).all<AlbumRow>();
   const albumEntryResult = await env.DB.prepare(
     "SELECT album_id, entry_id FROM album_entries ORDER BY album_id, position",
@@ -245,13 +257,16 @@ async function getJournal(request: Request, env: Env): Promise<Response> {
   }
   const albums = albumsResult.results.map((album) => {
     const entryIds = idsByAlbum.get(album.id) ?? [];
-    const coverKey = entryIds[0] ? entryKeyById.get(entryIds[0]) : undefined;
+    const coverKey = album.cover_entry_id ? entryKeyById.get(album.cover_entry_id) : undefined;
+    const pages = parseAlbumPages(album.pages_json, entryIds);
     return {
       id: album.id,
       title: album.title,
       description: album.description,
+      coverEntryId: album.cover_entry_id,
       coverUrl: coverKey ? mediaUrl(coverKey, request.url) : null,
       entryIds,
+      pages,
       createdAt: album.created_at,
     };
   });
@@ -333,7 +348,7 @@ async function getMedia(key: string, env: Env): Promise<Response> {
 }
 
 async function createAlbum(request: Request, env: Env): Promise<Response> {
-  const body = await readJson<{ title?: unknown; description?: unknown; entryIds?: unknown }>(request);
+  const body = await readJson<{ title?: unknown; description?: unknown; coverEntryId?: unknown; entryIds?: unknown; pages?: unknown }>(request);
   if (typeof body.title !== "string" || !body.title.trim() || body.title.length > 160) {
     throw new HttpError(400, "invalid_album_title");
   }
@@ -351,16 +366,79 @@ async function createAlbum(request: Request, env: Env): Promise<Response> {
     const rows = await env.DB.prepare(`SELECT id FROM entries WHERE id IN (${placeholders})`).bind(...entryIds).all<{ id: string }>();
     if (rows.results.length !== entryIds.length) throw new HttpError(400, "entry_not_found");
   }
+  if (body.coverEntryId !== undefined && body.coverEntryId !== null && (typeof body.coverEntryId !== "string" || !entryIds.includes(body.coverEntryId))) {
+    throw new HttpError(400, "invalid_cover_entry");
+  }
+  const pages = validateAlbumPages(body.pages, entryIds);
   const id = crypto.randomUUID();
   const statements = [
-    env.DB.prepare("INSERT INTO albums (id, title, description, created_at) VALUES (?, ?, ?, ?)")
-      .bind(id, body.title.trim(), cleanOptional(body.description), new Date().toISOString()),
+    env.DB.prepare("INSERT INTO albums (id, title, description, cover_entry_id, pages_json, created_at) VALUES (?, ?, ?, ?, ?, ?)")
+      .bind(id, body.title.trim(), cleanOptional(body.description), body.coverEntryId ?? null, JSON.stringify(pages), new Date().toISOString()),
     ...entryIds.map((entryId, position) =>
       env.DB.prepare("INSERT INTO album_entries (album_id, entry_id, position) VALUES (?, ?, ?)").bind(id, entryId, position),
     ),
   ];
   await env.DB.batch(statements);
   return json({ id }, 201);
+}
+
+function defaultAlbumPages(entryIds: string[]): AlbumPagePayload[] {
+  const pages: AlbumPagePayload[] = [];
+  for (let index = 0; index < entryIds.length; index += 2) {
+    const pageEntryIds = entryIds.slice(index, index + 2);
+    pages.push({
+      id: crypto.randomUUID(),
+      entryIds: pageEntryIds,
+      layout: pageEntryIds.length === 2 ? "duo" : "classic",
+      title: null,
+      text: null,
+    });
+  }
+  return pages;
+}
+
+function validateAlbumPages(value: unknown, albumEntryIds: string[]): AlbumPagePayload[] {
+  if (value === undefined || value === null) return defaultAlbumPages(albumEntryIds);
+  if (!Array.isArray(value) || value.length > 500) throw new HttpError(400, "invalid_album_pages");
+
+  const layouts = new Set<AlbumPageLayout>(["classic", "story", "full", "duo"]);
+  const pages: AlbumPagePayload[] = value.map((candidate) => {
+    if (!candidate || typeof candidate !== "object") throw new HttpError(400, "invalid_album_page");
+    const page = candidate as Record<string, unknown>;
+    if (typeof page.id !== "string" || !isId(page.id)) throw new HttpError(400, "invalid_album_page_id");
+    if (!Array.isArray(page.entryIds) || page.entryIds.length < 1 || page.entryIds.length > 2 || page.entryIds.some((id) => typeof id !== "string" || !albumEntryIds.includes(id))) {
+      throw new HttpError(400, "invalid_album_page_entries");
+    }
+    if (new Set(page.entryIds).size !== page.entryIds.length) throw new HttpError(400, "duplicate_album_page_entry");
+    if (typeof page.layout !== "string" || !layouts.has(page.layout as AlbumPageLayout)) throw new HttpError(400, "invalid_album_page_layout");
+    if ((page.layout === "duo") !== (page.entryIds.length === 2)) throw new HttpError(400, "invalid_album_page_layout");
+    if (page.title !== undefined && page.title !== null && typeof page.title !== "string") throw new HttpError(400, "invalid_album_page_title");
+    if (page.text !== undefined && page.text !== null && typeof page.text !== "string") throw new HttpError(400, "invalid_album_page_text");
+    if (typeof page.title === "string" && page.title.length > 160) throw new HttpError(400, "text_too_long");
+    if (typeof page.text === "string" && page.text.length > 2000) throw new HttpError(400, "text_too_long");
+    return {
+      id: page.id,
+      entryIds: page.entryIds as string[],
+      layout: page.layout as AlbumPageLayout,
+      title: cleanOptional(page.title),
+      text: cleanOptional(page.text),
+    };
+  });
+
+  const plannedIds = pages.flatMap((page) => page.entryIds);
+  if (plannedIds.length !== albumEntryIds.length || new Set(plannedIds).size !== plannedIds.length || albumEntryIds.some((id) => !plannedIds.includes(id))) {
+    throw new HttpError(400, "album_pages_do_not_match_entries");
+  }
+  return pages;
+}
+
+function parseAlbumPages(value: string | null, albumEntryIds: string[]): AlbumPagePayload[] {
+  if (!value) return defaultAlbumPages(albumEntryIds);
+  try {
+    return validateAlbumPages(JSON.parse(value), albumEntryIds);
+  } catch {
+    return defaultAlbumPages(albumEntryIds);
+  }
 }
 
 async function createOccasion(request: Request, env: Env): Promise<Response> {

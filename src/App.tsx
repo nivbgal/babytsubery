@@ -6,7 +6,7 @@ import { CalendarView } from "./components/CalendarView";
 import { ParentStudio, type StudioSection } from "./components/ParentStudio";
 import { TodayView } from "./components/TodayView";
 import { api, apiConfigured } from "./lib/api";
-import type { Album, MemoryEntry, Occasion, Role, ViewName } from "./types";
+import type { Album, AlbumDraft, MemoryEntry, Occasion, Role, ViewName } from "./types";
 import "./App.css";
 
 function newest(entries: MemoryEntry[]) {
@@ -153,7 +153,7 @@ export default function App() {
     }
   }
 
-  async function saveAlbum(album: Pick<Album, "title" | "description" | "entryIds">) {
+  async function saveAlbum(album: AlbumDraft) {
     await api.saveAlbum(album);
     setView("albums");
     setStudioOpen(false);

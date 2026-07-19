@@ -1,0 +1,2 @@
+ALTER TABLE albums ADD COLUMN cover_entry_id TEXT REFERENCES entries(id) ON DELETE SET NULL;
+ALTER TABLE albums ADD COLUMN pages_json TEXT;

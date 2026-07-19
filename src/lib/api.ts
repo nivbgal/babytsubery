@@ -1,4 +1,4 @@
-import type { Album, JournalPayload, Occasion, Session } from "../types";
+import type { AlbumDraft, JournalPayload, Occasion, Session } from "../types";
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "") ?? "";
 
@@ -26,7 +26,7 @@ export const api = {
   logout: () => request<{ ok: true }>("/v1/auth/logout", { method: "POST" }),
   uploadMemory: (form: FormData) => request<{ id: string }>("/v1/entries", { method: "POST", body: form }),
   deleteMemory: (id: string) => request<{ ok: true }>(`/v1/entries/${id}`, { method: "DELETE" }),
-  saveAlbum: (album: Pick<Album, "title" | "description" | "entryIds">) => request<{ id: string }>("/v1/albums", { method: "POST", body: JSON.stringify(album) }),
+  saveAlbum: (album: AlbumDraft) => request<{ id: string }>("/v1/albums", { method: "POST", body: JSON.stringify(album) }),
   saveOccasion: (occasion: Pick<Occasion, "occasionDate" | "title" | "description" | "type">) => request<{ id: string }>("/v1/occasions", { method: "POST", body: JSON.stringify(occasion) }),
   deleteOccasion: (id: string) => request<{ ok: true }>(`/v1/occasions/${id}`, { method: "DELETE" }),
   rotateInvite: () => request<{ token: string }>("/v1/invites/rotate", { method: "POST" }),

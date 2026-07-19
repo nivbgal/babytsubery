@@ -1,7 +1,7 @@
-import { ArrowLeft, BookOpen, Plus, Printer } from "lucide-react";
-import { useMemo, useState } from "react";
+import { ArrowLeft, BookHeart, ChevronLeft, ChevronRight, Plus, Printer } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { MemoryVisual } from "./MemoryVisual";
-import type { Album, MemoryEntry, Role } from "../types";
+import type { Album, AlbumPage, MemoryEntry, Role } from "../types";
 import "./AlbumsView.css";
 
 export interface AlbumsViewProps {
@@ -22,30 +22,6 @@ function asDate(value: string) {
   return new Date(`${value.slice(0, 10)}T12:00:00Z`);
 }
 
-function albumCover(album: Album, albumEntries: MemoryEntry[]): MemoryEntry {
-  const first = albumEntries[0];
-  if (first && !album.coverUrl) return first;
-
-  return {
-    id: `cover-${album.id}`,
-    memoryDate: first?.memoryDate ?? album.createdAt,
-    caption: album.description,
-    imageUrl: album.coverUrl ?? first?.imageUrl ?? "",
-    thumbUrl: album.coverUrl ?? first?.thumbUrl ?? "",
-    imageAlt: `Cover of ${album.title}`,
-    placeholderTone: first?.placeholderTone ?? "rose",
-    createdAt: album.createdAt,
-  };
-}
-
-function pairEntries(albumEntries: MemoryEntry[]) {
-  const pairs: Array<[MemoryEntry, MemoryEntry | null]> = [];
-  for (let index = 0; index < albumEntries.length; index += 2) {
-    pairs.push([albumEntries[index], albumEntries[index + 1] ?? null]);
-  }
-  return pairs;
-}
-
 function albumDateLine(albumEntries: MemoryEntry[]) {
   if (!albumEntries.length) return "Ready for its first memory";
   const dates = albumEntries.map((entry) => entry.memoryDate).sort();
@@ -54,83 +30,182 @@ function albumDateLine(albumEntries: MemoryEntry[]) {
   return first === last ? first : `${first} — ${last}`;
 }
 
-function AlbumLeaf({ entry, pageNumber }: { entry: MemoryEntry; pageNumber: number }) {
+function SpiralBinding() {
   return (
-    <div className="album-leaf">
-      <div className="album-leaf-photo">
-        <MemoryVisual entry={entry} />
-      </div>
-      <div className="album-leaf-caption">
-        <time dateTime={entry.memoryDate}>{readingDate.format(asDate(entry.memoryDate))}</time>
-        {entry.caption && <p className="display-type" dir="auto">{entry.caption}</p>}
-      </div>
-      <span className="album-page-number" aria-hidden="true">{String(pageNumber).padStart(2, "0")}</span>
+    <div className="spiral-binding" aria-hidden="true">
+      {Array.from({ length: 13 }, (_, index) => <span key={index} />)}
     </div>
+  );
+}
+
+function AlbumCoverPage({ album, coverEntry, albumEntries }: { album: Album; coverEntry: MemoryEntry | null; albumEntries: MemoryEntry[] }) {
+  return (
+    <article className={`album-sheet album-cover-page${coverEntry ? " album-cover-page--photo" : " album-cover-page--type"}`} aria-label={`${album.title} cover`}>
+      <SpiralBinding />
+      {coverEntry && <div className="album-cover-page__photo"><MemoryVisual entry={coverEntry} /></div>}
+      <div className="album-cover-page__copy">
+        <p>Baby Tsubery · Noa &amp; Rotem</p>
+        <h2 className="display-type" dir="auto">{album.title}</h2>
+        {album.description && <div className="album-cover-page__description" dir="auto">{album.description}</div>}
+        <span>{albumDateLine(albumEntries)}</span>
+      </div>
+    </article>
+  );
+}
+
+function PhotoWithCaption({ entry }: { entry: MemoryEntry }) {
+  return (
+    <figure className="album-designed-photo">
+      <MemoryVisual entry={entry} />
+      <figcaption dir="auto">
+        {entry.caption && <span>{entry.caption}</span>}
+        <time dateTime={entry.memoryDate}>{readingDate.format(asDate(entry.memoryDate))}</time>
+      </figcaption>
+    </figure>
+  );
+}
+
+function AlbumDesignedPage({ page, entries, pageNumber }: { page: AlbumPage; entries: MemoryEntry[]; pageNumber: number }) {
+  const primary = entries[0];
+  return (
+    <article className={`album-sheet album-designed-page album-designed-page--${page.layout}`} aria-label={`Album page ${pageNumber}`}>
+      <SpiralBinding />
+      {page.layout === "duo" ? (
+        <div className="album-duo-layout">
+          {entries.map((entry) => <PhotoWithCaption entry={entry} key={entry.id} />)}
+        </div>
+      ) : page.layout === "full" && primary ? (
+        <>
+          <div className="album-full-photo"><MemoryVisual entry={primary} /></div>
+          <div className="album-full-copy">
+            {page.title && <h3 className="display-type" dir="auto">{page.title}</h3>}
+            {primary.caption && <p dir="auto">{primary.caption}</p>}
+            {page.text && <div dir="auto">{page.text}</div>}
+            <time dateTime={primary.memoryDate}>{readingDate.format(asDate(primary.memoryDate))}</time>
+          </div>
+        </>
+      ) : page.layout === "story" && primary ? (
+        <div className="album-story-layout">
+          <PhotoWithCaption entry={primary} />
+          <div className="album-story-copy">
+            {page.title && <h3 className="display-type" dir="auto">{page.title}</h3>}
+            {page.text ? <p dir="auto">{page.text}</p> : <p className="album-story-copy__quiet">A little moment, held close.</p>}
+          </div>
+        </div>
+      ) : primary ? (
+        <div className="album-classic-layout">
+          {page.title && <h3 className="display-type" dir="auto">{page.title}</h3>}
+          <PhotoWithCaption entry={primary} />
+          {page.text && <p className="album-classic-story" dir="auto">{page.text}</p>}
+        </div>
+      ) : null}
+      {page.layout === "duo" && (page.title || page.text) && (
+        <div className="album-duo-note">
+          {page.title && <h3 className="display-type" dir="auto">{page.title}</h3>}
+          {page.text && <p dir="auto">{page.text}</p>}
+        </div>
+      )}
+      <span className="album-sheet-number" aria-hidden="true">{String(pageNumber).padStart(2, "0")}</span>
+    </article>
   );
 }
 
 export function AlbumsView({ albums, entries, role, onCreateAlbum }: AlbumsViewProps) {
   const [openAlbumId, setOpenAlbumId] = useState<string | null>(null);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [turnDirection, setTurnDirection] = useState<"next" | "previous">("next");
   const entriesById = useMemo(() => new Map(entries.map((entry) => [entry.id, entry])), [entries]);
   const openAlbum = albums.find((album) => album.id === openAlbumId) ?? null;
   const openEntries = openAlbum
     ? openAlbum.entryIds.map((id) => entriesById.get(id)).filter((entry): entry is MemoryEntry => Boolean(entry))
     : [];
-  const openSpreads = pairEntries(openEntries);
+  const openPages = openAlbum?.pages.map((page) => ({
+    page,
+    entries: page.entryIds.map((id) => entriesById.get(id)).filter((entry): entry is MemoryEntry => Boolean(entry)),
+  })).filter(({ entries: pageEntries }) => pageEntries.length > 0) ?? [];
+  const pageCount = openPages.length + 1;
+
+  useEffect(() => { setPageIndex(0); }, [openAlbumId]);
+
+  useEffect(() => {
+    if (!openAlbum) return;
+    function handleKeyDown(event: globalThis.KeyboardEvent) {
+      if (event.key === "ArrowRight" && pageIndex < pageCount - 1) {
+        setTurnDirection("next");
+        setPageIndex((current) => current + 1);
+      }
+      if (event.key === "ArrowLeft" && pageIndex > 0) {
+        setTurnDirection("previous");
+        setPageIndex((current) => current - 1);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [openAlbum, pageCount, pageIndex]);
+
+  function turnPage(nextIndex: number) {
+    if (nextIndex < 0 || nextIndex >= pageCount) return;
+    setTurnDirection(nextIndex > pageIndex ? "next" : "previous");
+    setPageIndex(nextIndex);
+  }
+
+  function printAlbum() {
+    if (!openAlbum) return;
+    const previousTitle = document.title;
+    document.title = `${openAlbum.title} — Baby Tsubery`;
+    window.print();
+    window.setTimeout(() => { document.title = previousTitle; }, 250);
+  }
 
   if (openAlbum) {
-    const cover = albumCover(openAlbum, openEntries);
+    const coverEntry = openAlbum.coverEntryId ? entriesById.get(openAlbum.coverEntryId) ?? null : null;
+    const currentPage = openPages[pageIndex - 1];
     return (
       <section className="album-reader" aria-labelledby="album-reader-title">
         <header className="album-reader-header no-print">
           <button className="album-back-button" type="button" onClick={() => setOpenAlbumId(null)}>
-            <ArrowLeft size={18} aria-hidden="true" />
-            All albums
+            <ArrowLeft size={18} aria-hidden="true" /> All albums
           </button>
           <div>
-            <p className="eyebrow">A family keepsake</p>
+            <p className="eyebrow">Spiral photo album</p>
             <h1 id="album-reader-title" className="display-type" dir="auto">{openAlbum.title}</h1>
-            {openAlbum.description && <p dir="auto">{openAlbum.description}</p>}
+            <p>Turn each page using the arrows below. The printed version keeps this exact page order.</p>
           </div>
-          <button className="button button-secondary album-print-button" type="button" onClick={() => window.print()}>
-            <Printer size={18} aria-hidden="true" />
-            Print or save PDF
+          <button className="button button-secondary album-print-button" type="button" onClick={printAlbum}>
+            <Printer size={18} aria-hidden="true" /> Print or save PDF
           </button>
         </header>
 
-        {openEntries.length ? (
-          <div className="album-volume" aria-label={`${openAlbum.title} photo album`}>
-            <section className="album-title-spread" aria-label="Album cover">
-              <div className="album-title-page">
-                <p className="album-edition">Baby Tsubery · Family album</p>
-                <h2 className="display-type" dir="auto">{openAlbum.title}</h2>
-                {openAlbum.description && <p className="album-title-description" dir="auto">{openAlbum.description}</p>}
-                <p className="album-date-line">{albumDateLine(openEntries)}</p>
-              </div>
-              <div className="album-title-photo">
-                <MemoryVisual entry={cover} />
-              </div>
-            </section>
-
-            <div className="album-spreads">
-              {openSpreads.map(([leftEntry, rightEntry], spreadIndex) => (
-                <article className="album-spread" key={leftEntry.id} data-spread={spreadIndex % 3}>
-                  <AlbumLeaf entry={leftEntry} pageNumber={spreadIndex * 2 + 1} />
-                  {rightEntry ? (
-                    <AlbumLeaf entry={rightEntry} pageNumber={spreadIndex * 2 + 2} />
-                  ) : (
-                    <div className="album-leaf album-closing-page" aria-hidden="true">
-                      <BookOpen size={25} />
-                      <p className="display-type">More little moments to come.</p>
-                    </div>
-                  )}
-                </article>
-              ))}
+        <div className="album-flip-reader no-print">
+          <p className="sr-only" aria-live="polite">{pageIndex === 0 ? "Album cover" : `Page ${pageIndex} of ${openPages.length}`}</p>
+          <div className="album-flip-stage">
+            <div className="album-sheet-stack" aria-hidden="true" />
+            <div className={`album-turn album-turn--${turnDirection}`} key={`${pageIndex}-${turnDirection}`}>
+              {pageIndex === 0 ? (
+                <AlbumCoverPage album={openAlbum} coverEntry={coverEntry} albumEntries={openEntries} />
+              ) : currentPage ? (
+                <AlbumDesignedPage page={currentPage.page} entries={currentPage.entries} pageNumber={pageIndex} />
+              ) : null}
             </div>
           </div>
-        ) : (
-          <p className="albums-empty">This keepsake is ready for its first memory.</p>
-        )}
+          <nav className="album-page-controls" aria-label="Album pages">
+            <button type="button" onClick={() => turnPage(pageIndex - 1)} disabled={pageIndex === 0}>
+              <ChevronLeft size={21} aria-hidden="true" /> Previous
+            </button>
+            <div className="album-page-progress" aria-hidden="true">
+              {Array.from({ length: pageCount }, (_, index) => <span className={index === pageIndex ? "is-active" : ""} key={index} />)}
+            </div>
+            <span>{pageIndex === 0 ? "Cover" : `${pageIndex} / ${openPages.length}`}</span>
+            <button type="button" onClick={() => turnPage(pageIndex + 1)} disabled={pageIndex === pageCount - 1}>
+              Next <ChevronRight size={21} aria-hidden="true" />
+            </button>
+          </nav>
+        </div>
+
+        <div className="album-print-document" aria-hidden="true">
+          <AlbumCoverPage album={openAlbum} coverEntry={coverEntry} albumEntries={openEntries} />
+          {openPages.map(({ page, entries: pageEntries }, index) => <AlbumDesignedPage page={page} entries={pageEntries} pageNumber={index + 1} key={page.id} />)}
+        </div>
       </section>
     );
   }
@@ -140,53 +215,35 @@ export function AlbumsView({ albums, entries, role, onCreateAlbum }: AlbumsViewP
       <header className="albums-header">
         <div>
           <p className="eyebrow">Made to keep</p>
-          <h1 id="albums-title" className="display-type">Little books of a life unfolding</h1>
-          <p>Gather favorite days into keepsakes to read together now and print as polished photo books.</p>
+          <h1 id="albums-title" className="display-type">Albums to turn through together</h1>
+          <p>Choose the cover, arrange every page, add longer stories, and print the finished book page by page.</p>
         </div>
-        {role === "parent" && (
-          <button type="button" className="button button-primary" onClick={onCreateAlbum}>
-            <Plus size={19} aria-hidden="true" />
-            Create an album
-          </button>
-        )}
+        {role === "parent" && <button type="button" className="button button-primary" onClick={onCreateAlbum}><Plus size={19} aria-hidden="true" /> Create an album</button>}
       </header>
 
       {albums.length ? (
         <div className="album-shelf">
           {albums.map((album, index) => {
-            const albumEntries = album.entryIds
-              .map((id) => entriesById.get(id))
-              .filter((entry): entry is MemoryEntry => Boolean(entry));
-            const cover = albumCover(album, albumEntries);
+            const albumEntries = album.entryIds.map((id) => entriesById.get(id)).filter((entry): entry is MemoryEntry => Boolean(entry));
+            const coverEntry = album.coverEntryId ? entriesById.get(album.coverEntryId) ?? null : null;
             return (
               <article className="album-card" key={album.id} data-cover={index % 3}>
-                <button type="button" onClick={() => setOpenAlbumId(album.id)} aria-label={`Open ${album.title}, ${albumEntries.length} ${albumEntries.length === 1 ? "memory" : "memories"}`}>
-                  <div className="album-cover">
-                    <div className="album-cover__spine" aria-hidden="true" />
-                    <div className="album-cover__label">
-                      <p>Baby Tsubery</p>
-                      <h2 className="display-type" dir="auto">{album.title}</h2>
-                    </div>
-                    <div className="album-cover__window">
-                      <MemoryVisual entry={cover} thumbnail />
-                    </div>
-                    <p className="album-cover__edition">Noa &amp; Rotem · {albumEntries.length} {albumEntries.length === 1 ? "memory" : "memories"}</p>
+                <button type="button" onClick={() => setOpenAlbumId(album.id)} aria-label={`Open ${album.title}, ${album.pages.length} ${album.pages.length === 1 ? "page" : "pages"}`}>
+                  <div className={`album-cover${coverEntry ? " album-cover--photo" : " album-cover--type"}`}>
+                    <div className="album-cover__spiral" aria-hidden="true">{Array.from({ length: 8 }, (_, ring) => <span key={ring} />)}</div>
+                    {coverEntry && <div className="album-cover__window"><MemoryVisual entry={coverEntry} thumbnail /></div>}
+                    {!coverEntry && <BookHeart className="album-cover__mark" size={31} strokeWidth={1.4} aria-hidden="true" />}
+                    <div className="album-cover__label"><p>Baby Tsubery</p><h2 className="display-type" dir="auto">{album.title}</h2></div>
+                    <p className="album-cover__edition">Noa &amp; Rotem · {album.pages.length} {album.pages.length === 1 ? "page" : "pages"}</p>
                   </div>
-                  <div className="album-card-copy">
-                    <p dir="auto">{album.description || albumDateLine(albumEntries)}</p>
-                    <span>Open album <span aria-hidden="true">→</span></span>
-                  </div>
+                  <div className="album-card-copy"><p dir="auto">{album.description || albumDateLine(albumEntries)}</p><span>Open and turn the pages <span aria-hidden="true">→</span></span></div>
                 </button>
               </article>
             );
           })}
         </div>
       ) : (
-        <div className="albums-empty">
-          <BookOpen size={30} aria-hidden="true" />
-          <h2 className="display-type">The bookshelf is waiting</h2>
-          <p>Albums created from favorite journal entries will live here.</p>
-        </div>
+        <div className="albums-empty"><BookHeart size={30} aria-hidden="true" /><h2 className="display-type">The bookshelf is waiting</h2><p>Albums created from favorite journal entries will live here.</p></div>
       )}
     </section>
   );

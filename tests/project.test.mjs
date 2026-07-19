@@ -66,11 +66,26 @@ test("album creation exits the studio and opens the album shelf", async () => {
   assert.match(app, /async function saveAlbum[\s\S]*setView\("albums"\);[\s\S]*setStudioOpen\(false\)/);
 });
 
-test("albums render as paired spreads and export as landscape pages", async () => {
+test("albums render as spiral page-turn books and export one portrait page per sheet", async () => {
   const albums = await readFile(new URL("../src/components/AlbumsView.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../src/components/AlbumsView.css", import.meta.url), "utf8");
-  assert.match(albums, /pairEntries\(openEntries\)/);
-  assert.match(albums, /className="album-spread"/);
-  assert.match(styles, /@page \{ size: A4 landscape; margin: 0; \}/);
+  assert.match(albums, /className="spiral-binding"/);
+  assert.match(albums, /turnPage\(pageIndex \+ 1\)/);
+  assert.match(albums, /className="album-print-document"/);
+  assert.match(styles, /@page \{ size: A4 portrait; margin: 0; \}/);
+  assert.match(styles, /height: 297mm !important/);
   assert.match(styles, /break-after: page/);
+});
+
+test("album creation stores explicit covers and parent-designed pages", async () => {
+  const studio = await readFile(new URL("../src/components/ParentStudio.tsx", import.meta.url), "utf8");
+  const worker = await readFile(new URL("../worker/index.ts", import.meta.url), "utf8");
+  const migration = await readFile(new URL("../worker/migrations/0003_album_page_design.sql", import.meta.url), "utf8");
+  assert.match(studio, /Choose the cover/);
+  assert.match(studio, /Text-only cover/);
+  assert.match(studio, /Design the pages/);
+  assert.match(studio, /coverEntryId/);
+  assert.match(worker, /validateAlbumPages/);
+  assert.match(migration, /cover_entry_id/);
+  assert.match(migration, /pages_json/);
 });

@@ -21,10 +21,24 @@ export interface Album {
   id: string;
   title: string;
   description: string | null;
+  coverEntryId: string | null;
   coverUrl: string | null;
   entryIds: string[];
+  pages: AlbumPage[];
   createdAt: string;
 }
+
+export type AlbumPageLayout = "classic" | "story" | "full" | "duo";
+
+export interface AlbumPage {
+  id: string;
+  entryIds: string[];
+  layout: AlbumPageLayout;
+  title: string | null;
+  text: string | null;
+}
+
+export type AlbumDraft = Pick<Album, "title" | "description" | "coverEntryId" | "entryIds" | "pages">;
 
 export interface JournalPayload {
   entries: MemoryEntry[];
