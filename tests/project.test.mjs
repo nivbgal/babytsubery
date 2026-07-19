@@ -116,3 +116,10 @@ test("edit controls are parent-only and destructive actions require confirmation
   assert.match(editor, /confirmDelete/);
   assert.match(editor, /Yes, delete/);
 });
+
+test("mobile pages stop cleanly at the document boundary", async () => {
+  const styles = await readFile(new URL("../src/styles.css", import.meta.url), "utf8");
+  assert.match(styles, /overscroll-behavior-y: none/);
+  assert.match(styles, /min-height: 100dvh/);
+  assert.match(styles, /padding: 14px 16px calc\(70px \+ env\(safe-area-inset-bottom\)\)/);
+});

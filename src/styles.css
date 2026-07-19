@@ -29,10 +29,12 @@
 }
 
 html {
+  height: 100%;
   min-width: 320px;
   max-width: 100%;
   overflow-x: hidden;
   overflow-x: clip;
+  overscroll-behavior-y: none;
   background: var(--parchment);
   scroll-behavior: smooth;
 }
@@ -41,9 +43,11 @@ body {
   margin: 0;
   min-width: 320px;
   max-width: 100%;
-  min-height: 100vh;
+  min-height: 100%;
+  min-height: 100dvh;
   overflow-x: hidden;
   overflow-x: clip;
+  overscroll-behavior-y: none;
   color: var(--ink);
   background:
     radial-gradient(circle at 12% 8%, rgba(233, 190, 192, 0.28), transparent 30rem),
@@ -55,6 +59,8 @@ body {
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  min-height: 100%;
+  min-height: 100dvh;
   overflow-x: hidden;
   overflow-x: clip;
 }
@@ -119,7 +125,7 @@ p {
 
 .app-shell {
   width: min(1480px, calc(100% - 32px));
-  min-height: calc(100vh - 32px);
+  min-height: calc(100dvh - 32px);
   margin: 16px auto;
   border: 1px solid rgba(110, 40, 63, 0.11);
   border-radius: 34px;
@@ -377,6 +383,8 @@ p {
     margin: 0;
     border: 0;
     border-radius: 0;
+    display: flex;
+    flex-direction: column;
   }
 
   .site-header {
@@ -421,7 +429,10 @@ p {
   }
 
   .view-container {
-    padding: 14px 16px calc(82px + env(safe-area-inset-bottom));
+    min-height: 0;
+    flex: 1 0 auto;
+    padding: 14px 16px calc(70px + env(safe-area-inset-bottom));
+    scroll-margin-bottom: calc(70px + env(safe-area-inset-bottom));
   }
 }
 
@@ -440,7 +451,8 @@ p {
   }
 
   .view-container {
-    padding: 10px 12px calc(68px + env(safe-area-inset-bottom));
+    padding: 10px 12px calc(62px + env(safe-area-inset-bottom));
+    scroll-margin-bottom: calc(62px + env(safe-area-inset-bottom));
   }
 }
 
