@@ -149,16 +149,16 @@
 }
 
 @media print {
-  @page { size: A4 portrait; margin: 0; }
+  @page { size: auto; margin: 0; }
 
   html,
-  body { width: 210mm !important; margin: 0 !important; padding: 0 !important; background: white !important; }
+  body { width: 100% !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; overflow: visible !important; background: white !important; }
   body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
   .app-shell,
   .view-container,
-  .album-reader { width: 210mm !important; max-width: none !important; margin: 0 !important; padding: 0 !important; border: 0 !important; box-shadow: none !important; }
-  .album-print-document { display: block !important; width: 210mm; margin: 0; padding: 0; }
-  .album-print-document .album-sheet { width: 210mm !important; height: 297mm !important; min-height: 297mm !important; max-height: 297mm !important; aspect-ratio: auto; margin: 0 !important; overflow: hidden !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; break-after: page; page-break-after: always; break-inside: avoid; page-break-inside: avoid; }
+  .album-reader { width: 100% !important; max-width: none !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; overflow: visible !important; border: 0 !important; box-shadow: none !important; }
+  .album-print-document { display: block !important; width: 100%; margin: 0; padding: 0; }
+  .album-print-document .album-sheet { width: 100vw !important; height: 100vh !important; min-height: 100vh !important; max-height: 100vh !important; aspect-ratio: auto; margin: 0 !important; overflow: hidden !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; break-after: page; page-break-after: always; break-inside: avoid; page-break-inside: avoid; }
   .album-print-document .album-sheet:last-child { break-after: auto; page-break-after: auto; }
   .album-print-document .album-designed-photo figcaption { font-size: 12pt; }
   .album-print-document .album-designed-photo figcaption time { font-size: 7pt; }

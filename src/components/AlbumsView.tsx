@@ -118,6 +118,13 @@ export function AlbumsView({ albums, entries, role, onCreateAlbum, onEditAlbum }
   for (let index = 0; index < openPages.length; index += 2) openSpreads.push([openPages[index], openPages[index + 1] ?? null]);
   const pageCount = openSpreads.length + 1;
 
+  useEffect(() => {
+    if (!openAlbum) return;
+    const previousTitle = document.title;
+    document.title = openAlbum.title.trim() || "Baby Tsubery Album";
+    return () => { document.title = previousTitle; };
+  }, [openAlbum]);
+
   useEffect(() => { setPageIndex(0); }, [openAlbumId]);
 
   useEffect(() => {
@@ -142,12 +149,11 @@ export function AlbumsView({ albums, entries, role, onCreateAlbum, onEditAlbum }
     setPageIndex(nextIndex);
   }
 
-  function printAlbum() {
+  async function printAlbum() {
     if (!openAlbum) return;
-    const previousTitle = document.title;
-    document.title = `${openAlbum.title} — Baby Tsubery`;
+    document.title = openAlbum.title.trim() || "Baby Tsubery Album";
+    await new Promise<void>((resolve) => window.requestAnimationFrame(() => window.requestAnimationFrame(() => resolve())));
     window.print();
-    window.setTimeout(() => { document.title = previousTitle; }, 250);
   }
 
   if (openAlbum) {
@@ -166,7 +172,7 @@ export function AlbumsView({ albums, entries, role, onCreateAlbum, onEditAlbum }
             <h1 id="album-reader-title" className="display-type" dir="auto">{openAlbum.title}</h1>
             <p>Turn each spread using the arrows below. The printed version keeps every designed page in this exact order.</p>
           </div>
-          <div className="album-reader-actions">{role === "parent" && <button className="icon-button" type="button" onClick={() => onEditAlbum(openAlbum)} aria-label={`Edit ${openAlbum.title}`}><Pencil size={18} aria-hidden="true" /></button>}<button className="button button-secondary album-print-button" type="button" onClick={printAlbum}><Printer size={18} aria-hidden="true" /> Print or save PDF</button></div>
+          <div className="album-reader-actions">{role === "parent" && <button className="icon-button" type="button" onClick={() => onEditAlbum(openAlbum)} aria-label={`Edit ${openAlbum.title}`}><Pencil size={18} aria-hidden="true" /></button>}<button className="button button-secondary album-print-button" type="button" onClick={() => void printAlbum()}><Printer size={18} aria-hidden="true" /> Print or save PDF</button></div>
         </header>
 
         <div className="album-flip-reader no-print">

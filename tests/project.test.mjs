@@ -73,9 +73,16 @@ test("albums render as lay-flat page-turn books and export one portrait page per
   assert.match(albums, /className="album-center-binding"/);
   assert.match(albums, /turnPage\(pageIndex \+ 1\)/);
   assert.match(albums, /className="album-print-document"/);
-  assert.match(styles, /@page \{ size: A4 portrait; margin: 0; \}/);
-  assert.match(styles, /height: 297mm !important/);
+  assert.match(styles, /@page \{ size: auto; margin: 0; \}/);
+  assert.match(styles, /width: 100vw !important; height: 100vh !important/);
   assert.match(styles, /break-after: page/);
+});
+
+test("album print keeps the album title active for the exported filename", async () => {
+  const albums = await readFile(new URL("../src/components/AlbumsView.tsx", import.meta.url), "utf8");
+  assert.match(albums, /document\.title = openAlbum\.title\.trim\(\) \|\| "Baby Tsubery Album"/);
+  assert.match(albums, /requestAnimationFrame\(\(\) => window\.requestAnimationFrame/);
+  assert.doesNotMatch(albums, /setTimeout\(\(\) => \{ document\.title/);
 });
 
 test("album creation stores explicit covers and parent-designed pages", async () => {
