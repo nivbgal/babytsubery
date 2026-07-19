@@ -4,12 +4,14 @@
 .edit-dialog > header p { display: flex; align-items: center; gap: 7px; margin: 0 0 4px; color: var(--rose); font-size: .68rem; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
 .edit-dialog h2 { margin: 0; color: var(--berry-deep); font-family: "Libre Caslon Display",Georgia,serif; font-size: 2.15rem; font-weight: 400; line-height: 1; }
 .edit-dialog > header button { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; color: var(--berry); background: var(--paper); }
-.edit-dialog form { display: grid; gap: 18px; padding: 24px 26px; }
+.edit-dialog form { min-width: 0; max-width: 100%; display: grid; gap: 18px; padding: 24px 26px; }
 .edit-dialog-photo { width: 100%; max-height: 230px; object-fit: contain; border: 10px solid var(--paper); border-radius: 12px; background: var(--shell); box-shadow: 0 10px 25px rgba(71,24,39,.12); }
-.edit-dialog-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.edit-dialog label { display: grid; gap: 7px; color: var(--berry-deep); font-size: .82rem; font-weight: 700; }
+.edit-dialog-grid { min-width: 0; max-width: 100%; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 14px; }
+.edit-dialog label { min-width: 0; max-width: 100%; display: grid; gap: 7px; color: var(--berry-deep); font-size: .82rem; font-weight: 700; }
 .edit-dialog label span { color: var(--muted); font-size: .72rem; font-weight: 400; }
-.edit-dialog input,.edit-dialog textarea,.edit-dialog select { width: 100%; min-height: 46px; padding: 10px 12px; border: 1px solid rgba(110,40,63,.22); border-radius: 10px; color: var(--ink); background: #fffdf9; font: inherit; font-size: 1rem; }
+.edit-dialog input,.edit-dialog textarea,.edit-dialog select { width: 100%; min-width: 0; max-width: 100%; min-height: 46px; padding: 10px 12px; border: 1px solid rgba(110,40,63,.22); border-radius: 10px; color: var(--ink); background: #fffdf9; font: inherit; font-size: 1rem; }
+.edit-dialog input[type="date"] { display: block; inline-size: 100%; min-inline-size: 0; max-inline-size: 100%; }
+.edit-dialog input[type="date"]::-webkit-date-and-time-value { min-width: 0; text-align: start; }
 .edit-dialog textarea { resize: vertical; unicode-bidi: plaintext; text-align: start; }
 .edit-dialog-wide { grid-column: 1/-1; }
 .edit-dialog-save { min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 12px; color: var(--paper); background: var(--berry); box-shadow: 0 5px 0 var(--berry-deep); font-weight: 800; }

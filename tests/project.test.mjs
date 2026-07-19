@@ -23,8 +23,12 @@ test("iPhone photo preparation has HEIC support and a JPEG encoding fallback", a
 test("mobile parent inputs avoid Safari focus zoom", async () => {
   const studioCss = await readFile(new URL("../src/components/ParentStudio.css", import.meta.url), "utf8");
   const accessCss = await readFile(new URL("../src/components/AccessGate.css", import.meta.url), "utf8");
+  const editorCss = await readFile(new URL("../src/components/EditItemDialog.css", import.meta.url), "utf8");
   assert.match(studioCss, /font-size: 1rem/);
   assert.match(studioCss, /scroll-padding-block/);
+  assert.match(studioCss, /input\[type="date"\][\s\S]*min-inline-size: 0/);
+  assert.match(studioCss, /grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\)/);
+  assert.match(editorCss, /input\[type="date"\][\s\S]*min-inline-size: 0/);
   assert.match(accessCss, /font-size: 1rem/);
 });
 

@@ -78,6 +78,14 @@ select {
   font: inherit;
 }
 
+input,
+textarea,
+select,
+fieldset {
+  min-width: 0;
+  max-width: 100%;
+}
+
 button,
 a,
 input,
