@@ -208,6 +208,7 @@
 }
 
 .studio-field > span { color: var(--muted, #76686a); font-size: .72rem; font-weight: 400; }
+.studio-field > .date-input-shell { color: var(--ink, #342629); font-size: 1rem; font-weight: 400; }
 .studio-field--wide { grid-column: 1 / -1; }
 
 .studio-field input,
@@ -225,13 +226,6 @@
   font-size: 1rem;
   line-height: 1.4;
   resize: vertical;
-}
-
-.studio-field input[type="date"] {
-  display: block;
-  inline-size: 100%;
-  min-inline-size: 0;
-  max-inline-size: 100%;
 }
 
 .studio-field input[type="date"]::-webkit-date-and-time-value {

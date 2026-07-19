@@ -103,7 +103,7 @@ export function EditItemDialog({ target, onClose, onUpdateMemory, onDeleteMemory
         <form onSubmit={save}>
           {isMemory && <img className="edit-dialog-photo" src={target.item.thumbUrl || target.item.imageUrl} alt="" />}
           <div className="edit-dialog-grid">
-            <label>Date<input type="date" value={date} onChange={(event) => setDate(event.target.value)} required disabled={busy} /></label>
+            <label>Date<span className="date-input-shell"><input type="date" value={date} onChange={(event) => setDate(event.target.value)} required disabled={busy} /></span></label>
             {!isMemory && <label>Kind<select value={occasionType} onChange={(event) => setOccasionType(event.target.value as OccasionType)} disabled={busy}><option value="birthday">Birthday</option><option value="milestone">Milestone</option><option value="celebration">Celebration</option><option value="custom">Other</option></select></label>}
             {isMemory ? (
               <label className="edit-dialog-wide">Caption <span>(optional)</span><textarea dir="auto" value={caption} onChange={(event) => setCaption(event.target.value)} maxLength={2000} rows={5} disabled={busy} /></label>

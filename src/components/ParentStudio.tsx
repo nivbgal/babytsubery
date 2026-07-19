@@ -546,7 +546,7 @@ export function ParentStudio({ isOpen, memories, occasions, initialSection = "me
                   <div><h3>Write the memory</h3><p>A date is required. The caption can be as small as a single lovely detail.</p></div>
                 </div>
                 <div className="studio-form__grid">
-                  <label className="studio-field">Date <input type="date" value={memoryDate} onChange={(event) => setMemoryDate(event.target.value)} required disabled={isUploading} /></label>
+                  <label className="studio-field">Date <span className="date-input-shell"><input type="date" value={memoryDate} onChange={(event) => setMemoryDate(event.target.value)} required disabled={isUploading} /></span></label>
                   <label className="studio-field studio-field--wide">Caption <span>(optional)</span><textarea dir="auto" value={caption} onChange={(event) => setCaption(event.target.value)} rows={3} maxLength={500} placeholder="The softest afternoon light…" disabled={isUploading} /></label>
                 </div>
               </div>
@@ -725,7 +725,7 @@ export function ParentStudio({ isOpen, memories, occasions, initialSection = "me
                 <div className="studio-section__heading"><span className="studio-section__number">✦</span><div><h3 id="studio-occasion-title">Add a special moment</h3><p>Birthdays, first words, first teeth, and the tiny milestones you’ll want to find again.</p></div></div>
                 <form className="studio-form" onSubmit={submitOccasion}>
                   <div className="studio-form__grid">
-                    <label className="studio-field">Date<input type="date" value={occasionDate} onChange={(event) => setOccasionDate(event.target.value)} required disabled={isSavingOccasion} /></label>
+                    <label className="studio-field">Date<span className="date-input-shell"><input type="date" value={occasionDate} onChange={(event) => setOccasionDate(event.target.value)} required disabled={isSavingOccasion} /></span></label>
                     <label className="studio-field">Kind<select value={occasionType} onChange={(event) => setOccasionType(event.target.value as OccasionType)} disabled={isSavingOccasion}><option value="birthday">Birthday</option><option value="milestone">Milestone</option><option value="celebration">Celebration</option><option value="custom">Other</option></select></label>
                     <label className="studio-field studio-field--wide">Name<input dir="auto" value={occasionTitle} onChange={(event) => setOccasionTitle(event.target.value)} maxLength={160} placeholder="First word" required disabled={isSavingOccasion} /></label>
                     <label className="studio-field studio-field--wide">Note <span>(optional)</span><textarea dir="auto" value={occasionDescription} onChange={(event) => setOccasionDescription(event.target.value)} maxLength={500} rows={3} placeholder="A little detail to remember…" disabled={isSavingOccasion} /></label>

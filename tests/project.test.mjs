@@ -21,14 +21,18 @@ test("iPhone photo preparation has HEIC support and a JPEG encoding fallback", a
 });
 
 test("mobile parent inputs avoid Safari focus zoom", async () => {
+  const studio = await readFile(new URL("../src/components/ParentStudio.tsx", import.meta.url), "utf8");
+  const editor = await readFile(new URL("../src/components/EditItemDialog.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../src/styles.css", import.meta.url), "utf8");
   const studioCss = await readFile(new URL("../src/components/ParentStudio.css", import.meta.url), "utf8");
   const accessCss = await readFile(new URL("../src/components/AccessGate.css", import.meta.url), "utf8");
-  const editorCss = await readFile(new URL("../src/components/EditItemDialog.css", import.meta.url), "utf8");
   assert.match(studioCss, /font-size: 1rem/);
   assert.match(studioCss, /scroll-padding-block/);
-  assert.match(studioCss, /input\[type="date"\][\s\S]*min-inline-size: 0/);
   assert.match(studioCss, /grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\)/);
-  assert.match(editorCss, /input\[type="date"\][\s\S]*min-inline-size: 0/);
+  assert.equal((studio.match(/className="date-input-shell"/g) ?? []).length, 2);
+  assert.equal((editor.match(/className="date-input-shell"/g) ?? []).length, 1);
+  assert.match(styles, /\.date-input-shell input\[type="date"\][\s\S]*padding: 0/);
+  assert.match(styles, /\.date-input-shell[\s\S]*overflow: hidden/);
   assert.match(accessCss, /font-size: 1rem/);
 });
 
