@@ -30,18 +30,9 @@ function albumDateLine(albumEntries: MemoryEntry[]) {
   return first === last ? first : `${first} — ${last}`;
 }
 
-function SpiralBinding() {
-  return (
-    <div className="spiral-binding" aria-hidden="true">
-      {Array.from({ length: 13 }, (_, index) => <span key={index} />)}
-    </div>
-  );
-}
-
 function AlbumCoverPage({ album, coverEntry, albumEntries }: { album: Album; coverEntry: MemoryEntry | null; albumEntries: MemoryEntry[] }) {
   return (
     <article className={`album-sheet album-cover-page${coverEntry ? " album-cover-page--photo" : " album-cover-page--type"}`} aria-label={`${album.title} cover`}>
-      <SpiralBinding />
       {coverEntry && <div className="album-cover-page__photo"><MemoryVisual entry={coverEntry} /></div>}
       <div className="album-cover-page__copy">
         <p>Baby Tsubery · Noa &amp; Rotem</p>
@@ -69,7 +60,6 @@ function AlbumDesignedPage({ page, entries, pageNumber }: { page: AlbumPage; ent
   const primary = entries[0];
   return (
     <article className={`album-sheet album-designed-page album-designed-page--${page.layout}`} aria-label={`Album page ${pageNumber}`}>
-      <SpiralBinding />
       {page.layout === "duo" ? (
         <div className="album-duo-layout">
           {entries.map((entry) => <PhotoWithCaption entry={entry} key={entry.id} />)}
@@ -123,7 +113,9 @@ export function AlbumsView({ albums, entries, role, onCreateAlbum }: AlbumsViewP
     page,
     entries: page.entryIds.map((id) => entriesById.get(id)).filter((entry): entry is MemoryEntry => Boolean(entry)),
   })).filter(({ entries: pageEntries }) => pageEntries.length > 0) ?? [];
-  const pageCount = openPages.length + 1;
+  const openSpreads = [] as Array<[typeof openPages[number], typeof openPages[number] | null]>;
+  for (let index = 0; index < openPages.length; index += 2) openSpreads.push([openPages[index], openPages[index + 1] ?? null]);
+  const pageCount = openSpreads.length + 1;
 
   useEffect(() => { setPageIndex(0); }, [openAlbumId]);
 
@@ -159,7 +151,9 @@ export function AlbumsView({ albums, entries, role, onCreateAlbum }: AlbumsViewP
 
   if (openAlbum) {
     const coverEntry = openAlbum.coverEntryId ? entriesById.get(openAlbum.coverEntryId) ?? null : null;
-    const currentPage = openPages[pageIndex - 1];
+    const currentSpread = openSpreads[pageIndex - 1];
+    const spreadFirstPage = pageIndex > 0 ? (pageIndex - 1) * 2 + 1 : 0;
+    const spreadLastPage = currentSpread?.[1] ? spreadFirstPage + 1 : spreadFirstPage;
     return (
       <section className="album-reader" aria-labelledby="album-reader-title">
         <header className="album-reader-header no-print">
@@ -167,9 +161,9 @@ export function AlbumsView({ albums, entries, role, onCreateAlbum }: AlbumsViewP
             <ArrowLeft size={18} aria-hidden="true" /> All albums
           </button>
           <div>
-            <p className="eyebrow">Spiral photo album</p>
+            <p className="eyebrow">Lay-flat photo album</p>
             <h1 id="album-reader-title" className="display-type" dir="auto">{openAlbum.title}</h1>
-            <p>Turn each page using the arrows below. The printed version keeps this exact page order.</p>
+            <p>Turn each spread using the arrows below. The printed version keeps every designed page in this exact order.</p>
           </div>
           <button className="button button-secondary album-print-button" type="button" onClick={printAlbum}>
             <Printer size={18} aria-hidden="true" /> Print or save PDF
@@ -177,14 +171,22 @@ export function AlbumsView({ albums, entries, role, onCreateAlbum }: AlbumsViewP
         </header>
 
         <div className="album-flip-reader no-print">
-          <p className="sr-only" aria-live="polite">{pageIndex === 0 ? "Album cover" : `Page ${pageIndex} of ${openPages.length}`}</p>
-          <div className="album-flip-stage">
+          <p className="sr-only" aria-live="polite">{pageIndex === 0 ? "Album cover" : `Pages ${spreadFirstPage}${spreadLastPage > spreadFirstPage ? ` and ${spreadLastPage}` : ""} of ${openPages.length}`}</p>
+          <div className={`album-flip-stage album-flip-stage--${pageIndex === 0 ? "cover" : "spread"}`}>
             <div className="album-sheet-stack" aria-hidden="true" />
             <div className={`album-turn album-turn--${turnDirection}`} key={`${pageIndex}-${turnDirection}`}>
               {pageIndex === 0 ? (
                 <AlbumCoverPage album={openAlbum} coverEntry={coverEntry} albumEntries={openEntries} />
-              ) : currentPage ? (
-                <AlbumDesignedPage page={currentPage.page} entries={currentPage.entries} pageNumber={pageIndex} />
+              ) : currentSpread ? (
+                <div className="album-open-spread">
+                  <AlbumDesignedPage page={currentSpread[0].page} entries={currentSpread[0].entries} pageNumber={spreadFirstPage} />
+                  <div className="album-center-binding" aria-hidden="true" />
+                  {currentSpread[1] ? (
+                    <AlbumDesignedPage page={currentSpread[1].page} entries={currentSpread[1].entries} pageNumber={spreadLastPage} />
+                  ) : (
+                    <article className="album-sheet album-blank-page" aria-hidden="true"><BookHeart size={27} /><p className="display-type">More little moments to come.</p></article>
+                  )}
+                </div>
               ) : null}
             </div>
           </div>
@@ -195,7 +197,7 @@ export function AlbumsView({ albums, entries, role, onCreateAlbum }: AlbumsViewP
             <div className="album-page-progress" aria-hidden="true">
               {Array.from({ length: pageCount }, (_, index) => <span className={index === pageIndex ? "is-active" : ""} key={index} />)}
             </div>
-            <span>{pageIndex === 0 ? "Cover" : `${pageIndex} / ${openPages.length}`}</span>
+            <span>{pageIndex === 0 ? "Cover" : spreadLastPage > spreadFirstPage ? `${spreadFirstPage}–${spreadLastPage}` : `${spreadFirstPage}`}</span>
             <button type="button" onClick={() => turnPage(pageIndex + 1)} disabled={pageIndex === pageCount - 1}>
               Next <ChevronRight size={21} aria-hidden="true" />
             </button>
@@ -230,7 +232,7 @@ export function AlbumsView({ albums, entries, role, onCreateAlbum }: AlbumsViewP
               <article className="album-card" key={album.id} data-cover={index % 3}>
                 <button type="button" onClick={() => setOpenAlbumId(album.id)} aria-label={`Open ${album.title}, ${album.pages.length} ${album.pages.length === 1 ? "page" : "pages"}`}>
                   <div className={`album-cover${coverEntry ? " album-cover--photo" : " album-cover--type"}`}>
-                    <div className="album-cover__spiral" aria-hidden="true">{Array.from({ length: 8 }, (_, ring) => <span key={ring} />)}</div>
+                    <div className="album-cover__spine" aria-hidden="true" />
                     {coverEntry && <div className="album-cover__window"><MemoryVisual entry={coverEntry} thumbnail /></div>}
                     {!coverEntry && <BookHeart className="album-cover__mark" size={31} strokeWidth={1.4} aria-hidden="true" />}
                     <div className="album-cover__label"><p>Baby Tsubery</p><h2 className="display-type" dir="auto">{album.title}</h2></div>

@@ -66,10 +66,11 @@ test("album creation exits the studio and opens the album shelf", async () => {
   assert.match(app, /async function saveAlbum[\s\S]*setView\("albums"\);[\s\S]*setStudioOpen\(false\)/);
 });
 
-test("albums render as spiral page-turn books and export one portrait page per sheet", async () => {
+test("albums render as lay-flat page-turn books and export one portrait page per sheet", async () => {
   const albums = await readFile(new URL("../src/components/AlbumsView.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../src/components/AlbumsView.css", import.meta.url), "utf8");
-  assert.match(albums, /className="spiral-binding"/);
+  assert.match(albums, /className="album-open-spread"/);
+  assert.match(albums, /className="album-center-binding"/);
   assert.match(albums, /turnPage\(pageIndex \+ 1\)/);
   assert.match(albums, /className="album-print-document"/);
   assert.match(styles, /@page \{ size: A4 portrait; margin: 0; \}/);
