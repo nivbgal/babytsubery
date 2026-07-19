@@ -47,7 +47,7 @@ test("mobile Today view fits short memories into the dynamic viewport", async ()
 test("Apple share and install metadata use the branded icon", async () => {
   const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
   const manifest = JSON.parse(await readFile(new URL("../public/site.webmanifest", import.meta.url), "utf8"));
-  assert.match(html, /rel="apple-touch-icon" sizes="180x180" href="\/apple-touch-icon\.png"/);
+  assert.match(html, /rel="apple-touch-icon" sizes="180x180" href="\/apple-touch-icon\.png\?v=2"/);
   assert.match(html, /rel="manifest" href="\/site\.webmanifest"/);
   assert.deepEqual(manifest.icons.map(({ sizes }) => sizes), ["192x192", "512x512"]);
 });
@@ -122,4 +122,12 @@ test("mobile pages stop cleanly at the document boundary", async () => {
   assert.match(styles, /overscroll-behavior-y: none/);
   assert.match(styles, /min-height: 100dvh/);
   assert.match(styles, /padding: 14px 16px calc\(70px \+ env\(safe-area-inset-bottom\)\)/);
+});
+
+test("Apple home-screen icon is full-bleed and cache-busted", async () => {
+  const iconSource = await readFile(new URL("../design-system/apple-touch-icon.svg", import.meta.url), "utf8");
+  const html = await readFile(new URL("../index.html", import.meta.url), "utf8");
+  assert.match(iconSource, /<rect width="180" height="180" fill="#6e283f"\/>/);
+  assert.doesNotMatch(iconSource, /rx=/);
+  assert.match(html, /apple-touch-icon\.png\?v=2/);
 });
