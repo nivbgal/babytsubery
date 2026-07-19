@@ -39,6 +39,8 @@ export interface AlbumPage {
 }
 
 export type AlbumDraft = Pick<Album, "title" | "description" | "coverEntryId" | "entryIds" | "pages">;
+export type MemoryUpdate = Pick<MemoryEntry, "memoryDate" | "caption">;
+export type OccasionDraft = Pick<Occasion, "occasionDate" | "title" | "description" | "type">;
 
 export interface JournalPayload {
   entries: MemoryEntry[];

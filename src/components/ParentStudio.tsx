@@ -11,13 +11,14 @@ import {
   KeyRound,
   Link2,
   LoaderCircle,
+  Pencil,
   RefreshCw,
   Settings,
   Trash2,
   Upload,
   X,
 } from "lucide-react";
-import type { AlbumDraft, AlbumPage, AlbumPageLayout, MemoryEntry, Occasion, OccasionType } from "../types";
+import type { Album, AlbumDraft, AlbumPage, AlbumPageLayout, MemoryEntry, Occasion, OccasionType } from "../types";
 import "./ParentStudio.css";
 
 export interface ParentStudioProps {
@@ -25,13 +26,15 @@ export interface ParentStudioProps {
   memories: MemoryEntry[];
   occasions: Occasion[];
   initialSection?: StudioSection;
+  editingAlbum?: Album | null;
   onClose: () => void;
   onUpload: (formData: FormData) => Promise<void>;
-  onSaveAlbum: (album: AlbumDraft) => Promise<void>;
+  onSaveAlbum: (album: AlbumDraft, albumId?: string) => Promise<void>;
+  onDeleteAlbum: (id: string) => Promise<void>;
   onRotateInvite: () => Promise<string>;
   onChangePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   onSaveOccasion: (occasion: Pick<Occasion, "occasionDate" | "title" | "description" | "type">) => Promise<void>;
-  onDeleteOccasion: (id: string) => Promise<void>;
+  onEditOccasion: (occasion: Occasion) => void;
 }
 
 export type StudioSection = "memory" | "album" | "settings" | "occasion";
@@ -146,7 +149,7 @@ function newAlbumPage(entryIds: string[]): AlbumPage {
   };
 }
 
-export function ParentStudio({ isOpen, memories, occasions, initialSection = "memory", onClose, onUpload, onSaveAlbum, onRotateInvite, onChangePassword, onSaveOccasion, onDeleteOccasion }: ParentStudioProps) {
+export function ParentStudio({ isOpen, memories, occasions, initialSection = "memory", editingAlbum = null, onClose, onUpload, onSaveAlbum, onDeleteAlbum, onRotateInvite, onChangePassword, onSaveOccasion, onEditOccasion }: ParentStudioProps) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -167,6 +170,7 @@ export function ParentStudio({ isOpen, memories, occasions, initialSection = "me
   const [albumPages, setAlbumPages] = useState<AlbumPage[]>([]);
   const [albumError, setAlbumError] = useState("");
   const [isSavingAlbum, setIsSavingAlbum] = useState(false);
+  const [showDeleteAlbumConfirm, setShowDeleteAlbumConfirm] = useState(false);
 
   const [rotateError, setRotateError] = useState("");
   const [rotatedInviteUrl, setRotatedInviteUrl] = useState("");
@@ -188,6 +192,25 @@ export function ParentStudio({ isOpen, memories, occasions, initialSection = "me
   useEffect(() => {
     if (isOpen) setSection(initialSection);
   }, [initialSection, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || initialSection !== "album") return;
+    setShowDeleteAlbumConfirm(false);
+    setAlbumError("");
+    if (editingAlbum) {
+      setAlbumTitle(editingAlbum.title);
+      setAlbumDescription(editingAlbum.description ?? "");
+      setSelectedIds(editingAlbum.entryIds);
+      setCoverEntryId(editingAlbum.coverEntryId);
+      setAlbumPages(editingAlbum.pages);
+    } else {
+      setAlbumTitle("");
+      setAlbumDescription("");
+      setSelectedIds([]);
+      setCoverEntryId(null);
+      setAlbumPages([]);
+    }
+  }, [editingAlbum, initialSection, isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -279,7 +302,7 @@ export function ParentStudio({ isOpen, memories, occasions, initialSection = "me
           title: page.title?.trim() || null,
           text: page.text?.trim() || null,
         })),
-      });
+      }, editingAlbum?.id);
       setAlbumTitle("");
       setAlbumDescription("");
       setSelectedIds([]);
@@ -287,6 +310,20 @@ export function ParentStudio({ isOpen, memories, occasions, initialSection = "me
       setAlbumPages([]);
     } catch (error) {
       setAlbumError(readableError(error, "We couldn’t save this album. Please try again."));
+    } finally {
+      setIsSavingAlbum(false);
+    }
+  }
+
+  async function removeAlbum() {
+    if (!editingAlbum || isSavingAlbum) return;
+    setAlbumError("");
+    setIsSavingAlbum(true);
+    try {
+      await onDeleteAlbum(editingAlbum.id);
+      onClose();
+    } catch (error) {
+      setAlbumError(readableError(error, "We couldn’t delete this album. Please try again."));
     } finally {
       setIsSavingAlbum(false);
     }
@@ -433,7 +470,7 @@ export function ParentStudio({ isOpen, memories, occasions, initialSection = "me
   const sectionTitle = section === "memory"
     ? "Add to her story"
     : section === "album"
-      ? "Make an album"
+      ? editingAlbum ? "Edit album" : "Make an album"
       : section === "occasion"
         ? "Mark a moment"
         : "Family access";
@@ -620,8 +657,9 @@ export function ParentStudio({ isOpen, memories, occasions, initialSection = "me
               )}
               {albumError && <p className="studio-message studio-message--error" role="alert">{albumError}</p>}
               <button className="studio-primary" type="submit" disabled={isSavingAlbum || memories.length === 0}>
-                {isSavingAlbum ? <><LoaderCircle className="studio-spinner" size={19} aria-hidden="true" /> Saving album…</> : <><BookHeart size={19} aria-hidden="true" /> Create album</>}
+                {isSavingAlbum ? <><LoaderCircle className="studio-spinner" size={19} aria-hidden="true" /> Saving album…</> : <><BookHeart size={19} aria-hidden="true" /> {editingAlbum ? "Save album changes" : "Create album"}</>}
               </button>
+              {editingAlbum && <div className="studio-delete-zone">{!showDeleteAlbumConfirm ? <button type="button" onClick={() => setShowDeleteAlbumConfirm(true)} disabled={isSavingAlbum}><Trash2 size={17} aria-hidden="true" /> Delete album</button> : <div role="alert"><span><strong>Delete this album?</strong><small>The memories will stay safely in the journal.</small></span><button type="button" className="studio-secondary" onClick={() => setShowDeleteAlbumConfirm(false)} disabled={isSavingAlbum}>Cancel</button><button type="button" className="studio-danger" onClick={() => void removeAlbum()} disabled={isSavingAlbum}><Trash2 size={16} aria-hidden="true" /> Yes, delete</button></div>}</div>}
             </form>
           )}
 
@@ -682,7 +720,7 @@ export function ParentStudio({ isOpen, memories, occasions, initialSection = "me
                   <button className="studio-primary" type="submit" disabled={isSavingOccasion}>{isSavingOccasion ? "Saving moment…" : "Add to calendar"}</button>
                 </form>
               </div>
-              {occasions.length > 0 && <div className="studio-occasion-list"><h3>Saved moments</h3>{occasions.map((occasion) => <div className="studio-occasion-item" key={occasion.id}><span><strong>{occasion.title}</strong><small>{formatMemoryDate(occasion.occasionDate)}</small></span><button type="button" className="icon-button" onClick={() => void onDeleteOccasion(occasion.id)} aria-label={`Remove ${occasion.title}`}><Trash2 size={16} aria-hidden="true" /></button></div>)}</div>}
+              {occasions.length > 0 && <div className="studio-occasion-list"><h3>Saved moments</h3>{occasions.map((occasion) => <div className="studio-occasion-item" key={occasion.id}><span><strong>{occasion.title}</strong><small>{formatMemoryDate(occasion.occasionDate)}</small></span><button type="button" className="icon-button" onClick={() => onEditOccasion(occasion)} aria-label={`Edit ${occasion.title}`}><Pencil size={16} aria-hidden="true" /></button></div>)}</div>}
             </section>
           )}
         </div>

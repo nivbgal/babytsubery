@@ -96,3 +96,23 @@ test("the private gift note is addressed to the whole family", async () => {
   assert.match(app, /To Noa, Rotem, and Baby,/);
   assert.match(app, /aria-label="red heart">❤️/);
 });
+
+test("parent-created content has update and delete routes guarded by parent authorization", async () => {
+  const worker = await readFile(new URL("../worker/index.ts", import.meta.url), "utf8");
+  assert.match(worker, /request\.method === "PATCH" && entryMatch[\s\S]*requireParent/);
+  assert.match(worker, /request\.method === "PATCH" && albumMatch[\s\S]*requireParent/);
+  assert.match(worker, /request\.method === "DELETE" && albumMatch[\s\S]*requireParent/);
+  assert.match(worker, /request\.method === "PATCH" && occasionMatch[\s\S]*requireParent/);
+  assert.match(worker, /Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS/);
+});
+
+test("edit controls are parent-only and destructive actions require confirmation", async () => {
+  const app = await readFile(new URL("../src/App.tsx", import.meta.url), "utf8");
+  const editor = await readFile(new URL("../src/components/EditItemDialog.tsx", import.meta.url), "utf8");
+  const albums = await readFile(new URL("../src/components/AlbumsView.tsx", import.meta.url), "utf8");
+  assert.match(app, /role === "parent" && <EditItemDialog/);
+  assert.match(app, /canEdit=\{role === "parent"\}/);
+  assert.match(albums, /role === "parent" && <button className="album-card-edit"/);
+  assert.match(editor, /confirmDelete/);
+  assert.match(editor, /Yes, delete/);
+});

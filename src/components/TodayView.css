@@ -92,6 +92,8 @@
   font-size: 0.72rem;
   font-weight: 700;
 }
+.today-edit-button { position: absolute; z-index: 5; top: clamp(25px,4vw,38px); right: clamp(25px,4vw,38px); width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid rgba(255,250,244,.48); border-radius: 50%; color: var(--berry); background: rgba(255,250,244,.92); box-shadow: 0 6px 18px rgba(52,38,41,.18); backdrop-filter: blur(8px); }
+.today-edit-button:focus-visible { outline: 3px solid var(--berry); outline-offset: 3px; }
 
 .today-carousel-control {
   position: absolute;

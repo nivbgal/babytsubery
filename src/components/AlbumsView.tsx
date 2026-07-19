@@ -1,4 +1,4 @@
-import { ArrowLeft, BookHeart, ChevronLeft, ChevronRight, Plus, Printer } from "lucide-react";
+import { ArrowLeft, BookHeart, ChevronLeft, ChevronRight, Pencil, Plus, Printer } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { MemoryVisual } from "./MemoryVisual";
 import type { Album, AlbumPage, MemoryEntry, Role } from "../types";
@@ -9,6 +9,7 @@ export interface AlbumsViewProps {
   entries: MemoryEntry[];
   role: Role;
   onCreateAlbum: () => void;
+  onEditAlbum: (album: Album) => void;
 }
 
 const readingDate = new Intl.DateTimeFormat("en", {
@@ -100,7 +101,7 @@ function AlbumDesignedPage({ page, entries, pageNumber }: { page: AlbumPage; ent
   );
 }
 
-export function AlbumsView({ albums, entries, role, onCreateAlbum }: AlbumsViewProps) {
+export function AlbumsView({ albums, entries, role, onCreateAlbum, onEditAlbum }: AlbumsViewProps) {
   const [openAlbumId, setOpenAlbumId] = useState<string | null>(null);
   const [pageIndex, setPageIndex] = useState(0);
   const [turnDirection, setTurnDirection] = useState<"next" | "previous">("next");
@@ -165,9 +166,7 @@ export function AlbumsView({ albums, entries, role, onCreateAlbum }: AlbumsViewP
             <h1 id="album-reader-title" className="display-type" dir="auto">{openAlbum.title}</h1>
             <p>Turn each spread using the arrows below. The printed version keeps every designed page in this exact order.</p>
           </div>
-          <button className="button button-secondary album-print-button" type="button" onClick={printAlbum}>
-            <Printer size={18} aria-hidden="true" /> Print or save PDF
-          </button>
+          <div className="album-reader-actions">{role === "parent" && <button className="icon-button" type="button" onClick={() => onEditAlbum(openAlbum)} aria-label={`Edit ${openAlbum.title}`}><Pencil size={18} aria-hidden="true" /></button>}<button className="button button-secondary album-print-button" type="button" onClick={printAlbum}><Printer size={18} aria-hidden="true" /> Print or save PDF</button></div>
         </header>
 
         <div className="album-flip-reader no-print">
@@ -230,6 +229,7 @@ export function AlbumsView({ albums, entries, role, onCreateAlbum }: AlbumsViewP
             const coverEntry = album.coverEntryId ? entriesById.get(album.coverEntryId) ?? null : null;
             return (
               <article className="album-card" key={album.id} data-cover={index % 3}>
+                {role === "parent" && <button className="album-card-edit" type="button" onClick={() => onEditAlbum(album)} aria-label={`Edit ${album.title}`}><Pencil size={17} aria-hidden="true" /></button>}
                 <button type="button" onClick={() => setOpenAlbumId(album.id)} aria-label={`Open ${album.title}, ${album.pages.length} ${album.pages.length === 1 ? "page" : "pages"}`}>
                   <div className={`album-cover${coverEntry ? " album-cover--photo" : " album-cover--type"}`}>
                     <div className="album-cover__spine" aria-hidden="true" />

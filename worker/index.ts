@@ -149,6 +149,10 @@ async function route(request: Request, env: Env): Promise<Response> {
   }
 
   const entryMatch = path.match(/^\/v1\/entries\/([^/]+)$/);
+  if (request.method === "PATCH" && entryMatch) {
+    await requireParent(request, env);
+    return updateEntry(decodeURIComponent(entryMatch[1]), request, env);
+  }
   if (request.method === "DELETE" && entryMatch) {
     await requireParent(request, env);
     return deleteEntry(decodeURIComponent(entryMatch[1]), env);
@@ -165,12 +169,26 @@ async function route(request: Request, env: Env): Promise<Response> {
     return createAlbum(request, env);
   }
 
+  const albumMatch = path.match(/^\/v1\/albums\/([^/]+)$/);
+  if (request.method === "PATCH" && albumMatch) {
+    await requireParent(request, env);
+    return updateAlbum(decodeURIComponent(albumMatch[1]), request, env);
+  }
+  if (request.method === "DELETE" && albumMatch) {
+    await requireParent(request, env);
+    return deleteAlbum(decodeURIComponent(albumMatch[1]), env);
+  }
+
   if (request.method === "POST" && path === "/v1/occasions") {
     await requireParent(request, env);
     return createOccasion(request, env);
   }
 
   const occasionMatch = path.match(/^\/v1\/occasions\/([^/]+)$/);
+  if (request.method === "PATCH" && occasionMatch) {
+    await requireParent(request, env);
+    return updateOccasion(decodeURIComponent(occasionMatch[1]), request, env);
+  }
   if (request.method === "DELETE" && occasionMatch) {
     await requireParent(request, env);
     return deleteOccasion(decodeURIComponent(occasionMatch[1]), env);
@@ -334,6 +352,18 @@ async function deleteEntry(id: string, env: Env): Promise<Response> {
   return json({ ok: true });
 }
 
+async function updateEntry(id: string, request: Request, env: Env): Promise<Response> {
+  if (!isId(id)) throw new HttpError(404, "entry_not_found");
+  const body = await readJson<{ memoryDate?: unknown; caption?: unknown }>(request);
+  if (typeof body.memoryDate !== "string" || !isDate(body.memoryDate)) throw new HttpError(400, "invalid_date");
+  if (body.caption !== undefined && body.caption !== null && typeof body.caption !== "string") throw new HttpError(400, "invalid_caption");
+  if (typeof body.caption === "string" && body.caption.length > 2000) throw new HttpError(400, "text_too_long");
+  const result = await env.DB.prepare("UPDATE entries SET memory_date = ?, caption = ? WHERE id = ?")
+    .bind(body.memoryDate, cleanOptional(body.caption), id).run();
+  if (!result.meta.changes) throw new HttpError(404, "entry_not_found");
+  return json({ ok: true });
+}
+
 async function getMedia(key: string, env: Env): Promise<Response> {
   if (!/^entries\/[0-9a-f-]{36}\.(?:jpg|png|webp|avif)$/.test(key)) throw new HttpError(404, "media_not_found");
   const authorized = await env.DB.prepare("SELECT 1 AS found FROM entries WHERE image_key = ?").bind(key).first();
@@ -380,6 +410,38 @@ async function createAlbum(request: Request, env: Env): Promise<Response> {
   ];
   await env.DB.batch(statements);
   return json({ id }, 201);
+}
+
+async function updateAlbum(id: string, request: Request, env: Env): Promise<Response> {
+  if (!isId(id)) throw new HttpError(404, "album_not_found");
+  const existing = await env.DB.prepare("SELECT id FROM albums WHERE id = ?").bind(id).first();
+  if (!existing) throw new HttpError(404, "album_not_found");
+  const body = await readJson<{ title?: unknown; description?: unknown; coverEntryId?: unknown; entryIds?: unknown; pages?: unknown }>(request);
+  if (typeof body.title !== "string" || !body.title.trim() || body.title.length > 160) throw new HttpError(400, "invalid_album_title");
+  if (body.description !== undefined && body.description !== null && typeof body.description !== "string") throw new HttpError(400, "invalid_album_description");
+  if (typeof body.description === "string" && body.description.length > 2000) throw new HttpError(400, "text_too_long");
+  if (!Array.isArray(body.entryIds) || body.entryIds.length < 1 || body.entryIds.length > 500 || body.entryIds.some((entryId) => typeof entryId !== "string" || !isId(entryId))) throw new HttpError(400, "invalid_entry_ids");
+  const entryIds = body.entryIds as string[];
+  if (new Set(entryIds).size !== entryIds.length) throw new HttpError(400, "duplicate_entry_ids");
+  const placeholders = entryIds.map(() => "?").join(",");
+  const rows = await env.DB.prepare(`SELECT id FROM entries WHERE id IN (${placeholders})`).bind(...entryIds).all<{ id: string }>();
+  if (rows.results.length !== entryIds.length) throw new HttpError(400, "entry_not_found");
+  if (body.coverEntryId !== undefined && body.coverEntryId !== null && (typeof body.coverEntryId !== "string" || !entryIds.includes(body.coverEntryId))) throw new HttpError(400, "invalid_cover_entry");
+  const pages = validateAlbumPages(body.pages, entryIds);
+  await env.DB.batch([
+    env.DB.prepare("UPDATE albums SET title = ?, description = ?, cover_entry_id = ?, pages_json = ? WHERE id = ?")
+      .bind(body.title.trim(), cleanOptional(body.description), body.coverEntryId ?? null, JSON.stringify(pages), id),
+    env.DB.prepare("DELETE FROM album_entries WHERE album_id = ?").bind(id),
+    ...entryIds.map((entryId, position) => env.DB.prepare("INSERT INTO album_entries (album_id, entry_id, position) VALUES (?, ?, ?)").bind(id, entryId, position)),
+  ]);
+  return json({ ok: true });
+}
+
+async function deleteAlbum(id: string, env: Env): Promise<Response> {
+  if (!isId(id)) throw new HttpError(404, "album_not_found");
+  const result = await env.DB.prepare("DELETE FROM albums WHERE id = ?").bind(id).run();
+  if (!result.meta.changes) throw new HttpError(404, "album_not_found");
+  return json({ ok: true });
 }
 
 function defaultAlbumPages(entryIds: string[]): AlbumPagePayload[] {
@@ -458,6 +520,21 @@ async function createOccasion(request: Request, env: Env): Promise<Response> {
 async function deleteOccasion(id: string, env: Env): Promise<Response> {
   if (!isId(id)) throw new HttpError(404, "occasion_not_found");
   const result = await env.DB.prepare("DELETE FROM occasions WHERE id = ?").bind(id).run();
+  if (!result.meta.changes) throw new HttpError(404, "occasion_not_found");
+  return json({ ok: true });
+}
+
+async function updateOccasion(id: string, request: Request, env: Env): Promise<Response> {
+  if (!isId(id)) throw new HttpError(404, "occasion_not_found");
+  const body = await readJson<{ occasionDate?: unknown; title?: unknown; description?: unknown; type?: unknown }>(request);
+  const types = new Set(["birthday", "milestone", "celebration", "custom"]);
+  if (typeof body.occasionDate !== "string" || !isDate(body.occasionDate)) throw new HttpError(400, "invalid_date");
+  if (typeof body.title !== "string" || !body.title.trim() || body.title.length > 160) throw new HttpError(400, "invalid_occasion_title");
+  if (body.description !== undefined && body.description !== null && typeof body.description !== "string") throw new HttpError(400, "invalid_occasion_description");
+  if (typeof body.description === "string" && body.description.length > 500) throw new HttpError(400, "text_too_long");
+  if (typeof body.type !== "string" || !types.has(body.type)) throw new HttpError(400, "invalid_occasion_type");
+  const result = await env.DB.prepare("UPDATE occasions SET occasion_date = ?, title = ?, description = ?, type = ? WHERE id = ?")
+    .bind(body.occasionDate, body.title.trim(), cleanOptional(body.description), body.type, id).run();
   if (!result.meta.changes) throw new HttpError(404, "occasion_not_found");
   return json({ ok: true });
 }
@@ -631,7 +708,7 @@ function withHeaders(response: Response, origin: string | null): Response {
   if (origin && ALLOWED_ORIGINS.has(origin)) {
     headers.set("Access-Control-Allow-Origin", origin);
     headers.set("Access-Control-Allow-Credentials", "true");
-    headers.set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+    headers.set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
     headers.set("Access-Control-Allow-Headers", "Content-Type");
     headers.append("Vary", "Origin");
   }

@@ -3,10 +3,11 @@ import { Info, LogOut, Plus, Share2 } from "lucide-react";
 import { AccessGate, type GuestInviteState } from "./components/AccessGate";
 import { AlbumsView } from "./components/AlbumsView";
 import { CalendarView } from "./components/CalendarView";
+import { EditItemDialog, type EditableItem } from "./components/EditItemDialog";
 import { ParentStudio, type StudioSection } from "./components/ParentStudio";
 import { TodayView } from "./components/TodayView";
 import { api, apiConfigured } from "./lib/api";
-import type { Album, AlbumDraft, MemoryEntry, Occasion, Role, ViewName } from "./types";
+import type { Album, AlbumDraft, MemoryEntry, MemoryUpdate, Occasion, OccasionDraft, Role, ViewName } from "./types";
 import "./App.css";
 
 function newest(entries: MemoryEntry[]) {
@@ -40,6 +41,8 @@ export default function App() {
   const [guestInviteState, setGuestInviteState] = useState<GuestInviteState>("none");
   const [studioSection, setStudioSection] = useState<StudioSection>("memory");
   const [showParentNote, setShowParentNote] = useState(false);
+  const [editTarget, setEditTarget] = useState<EditableItem | null>(null);
+  const [editingAlbum, setEditingAlbum] = useState<Album | null>(null);
 
   useLayoutEffect(() => {
     const previousRestoration = window.history.scrollRestoration;
@@ -63,7 +66,14 @@ export default function App() {
   }, [role]);
 
   function openStudio(section: StudioSection) {
+    setEditingAlbum(null);
     setStudioSection(section);
+    setStudioOpen(true);
+  }
+
+  function editAlbum(album: Album) {
+    setEditingAlbum(album);
+    setStudioSection("album");
     setStudioOpen(true);
   }
 
@@ -153,8 +163,9 @@ export default function App() {
     }
   }
 
-  async function saveAlbum(album: AlbumDraft) {
-    await api.saveAlbum(album);
+  async function saveAlbum(album: AlbumDraft, albumId?: string) {
+    if (albumId) await api.updateAlbum(albumId, album);
+    else await api.saveAlbum(album);
     setView("albums");
     setStudioOpen(false);
     resetPageScroll();
@@ -165,6 +176,22 @@ export default function App() {
       // the parents inside a completed creation flow or reporting a false error.
       window.setTimeout(() => { void loadJournal().catch(() => undefined); }, 1200);
     }
+  }
+
+  async function deleteAlbum(id: string) {
+    await api.deleteAlbum(id);
+    setEditingAlbum(null);
+    await loadJournal();
+  }
+
+  async function updateMemory(id: string, update: MemoryUpdate) {
+    await api.updateMemory(id, update);
+    await loadJournal(id);
+  }
+
+  async function deleteMemory(id: string) {
+    await api.deleteMemory(id);
+    await loadJournal();
   }
 
   async function rotateInvite() {
@@ -190,6 +217,16 @@ export default function App() {
   async function deleteOccasion(id: string) {
     await api.deleteOccasion(id);
     await loadJournal();
+  }
+
+  async function updateOccasion(id: string, occasion: OccasionDraft) {
+    await api.updateOccasion(id, occasion);
+    await loadJournal();
+  }
+
+  function editOccasion(occasion: Occasion) {
+    setStudioOpen(false);
+    setEditTarget({ kind: "occasion", item: occasion });
   }
 
   async function logout() {
@@ -276,11 +313,11 @@ export default function App() {
       <main className="view-container">
         <p className="sr-only" aria-live="polite">{view[0].toUpperCase() + view.slice(1)} view</p>
         {view === "today" && (
-          <TodayView entries={entries} currentEntry={selectedEntry} nickname={nickname} onSelectEntry={chooseEntry} />
+          <TodayView entries={entries} currentEntry={selectedEntry} nickname={nickname} onSelectEntry={chooseEntry} canEdit={role === "parent"} onEdit={(entry) => setEditTarget({ kind: "memory", item: entry })} />
         )}
         {view === "calendar" && <CalendarView entries={entries} occasions={occasions} onSelectEntry={chooseEntry} />}
         {view === "albums" && (
-          <AlbumsView albums={albums} entries={entries} role={role} onCreateAlbum={() => openStudio("album")} />
+          <AlbumsView albums={albums} entries={entries} role={role} onCreateAlbum={() => openStudio("album")} onEditAlbum={editAlbum} />
         )}
       </main>
 
@@ -290,15 +327,18 @@ export default function App() {
             memories={entries}
             occasions={occasions}
             initialSection={studioSection}
-            onClose={() => setStudioOpen(false)}
+            editingAlbum={editingAlbum}
+            onClose={() => { setStudioOpen(false); setEditingAlbum(null); }}
             onUpload={uploadMemory}
             onSaveAlbum={saveAlbum}
+            onDeleteAlbum={deleteAlbum}
             onRotateInvite={rotateInvite}
             onChangePassword={changePassword}
             onSaveOccasion={saveOccasion}
-            onDeleteOccasion={deleteOccasion}
+            onEditOccasion={editOccasion}
           />
       )}
+      {role === "parent" && <EditItemDialog target={editTarget} onClose={() => setEditTarget(null)} onUpdateMemory={updateMemory} onDeleteMemory={deleteMemory} onUpdateOccasion={updateOccasion} onDeleteOccasion={deleteOccasion} />}
     </div>
   );
 }

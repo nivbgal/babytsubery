@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil } from "lucide-react";
 import { MemoryVisual } from "./MemoryVisual";
 import type { MemoryEntry } from "../types";
 import "./TodayView.css";
@@ -9,6 +9,8 @@ export interface TodayViewProps {
   currentEntry: MemoryEntry | null;
   nickname: string;
   onSelectEntry: (entry: MemoryEntry) => void;
+  canEdit?: boolean;
+  onEdit?: (entry: MemoryEntry) => void;
 }
 
 const stampDate = new Intl.DateTimeFormat("en", {
@@ -47,7 +49,7 @@ function relativePostTime(value: string, now: number) {
   return `${years} ${years === 1 ? "year" : "years"} ago`;
 }
 
-export function TodayView({ entries, currentEntry, nickname, onSelectEntry }: TodayViewProps) {
+export function TodayView({ entries, currentEntry, nickname, onSelectEntry, canEdit = false, onEdit }: TodayViewProps) {
   const [now, setNow] = useState(Date.now);
 
   useEffect(() => {
@@ -116,6 +118,7 @@ export function TodayView({ entries, currentEntry, nickname, onSelectEntry }: To
           >
             {relativePostTime(currentEntry.createdAt, now)}
           </time>
+          {canEdit && onEdit && <button className="today-edit-button" type="button" onClick={() => onEdit(currentEntry)} aria-label="Edit this memory"><Pencil size={17} aria-hidden="true" /></button>}
           {previousPhoto && nextPhoto && (
             <>
               <button

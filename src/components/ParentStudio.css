@@ -378,6 +378,11 @@
 .studio-occasion-item span { display: grid; gap: 3px; min-width: 0; }
 .studio-occasion-item strong { color: var(--berry-deep, #471827); }
 .studio-occasion-item small { color: var(--muted, #76686a); }
+.studio-delete-zone { margin-top: 4px; padding: 15px 4px 0; border-top: 1px solid rgba(142,41,72,.18); }
+.studio-delete-zone > button { min-height: 44px; display: inline-flex; align-items: center; gap: 8px; border: 0; color: #8e2948; background: transparent; font-weight: 800; }
+.studio-delete-zone > div { display: flex; align-items: center; gap: 9px; padding: 13px; border-radius: 12px; background: rgba(233,190,192,.22); }
+.studio-delete-zone span { display: grid; gap: 3px; margin-right: auto; color: var(--berry-deep); }.studio-delete-zone small { color: var(--muted); }
+.studio-danger { min-height: 44px; display: inline-flex; align-items: center; gap: 7px; padding: 0 14px; border: 0; border-radius: 10px; color: #fff; background: #8e2948; font-weight: 800; }
 
 @keyframes parent-studio-arrive { from { opacity: 0; transform: translateX(22px); } }
 @keyframes studio-spin { to { transform: rotate(360deg); } }
@@ -402,6 +407,7 @@
   .studio-page-preview { min-height: 270px; }
   .studio-page-actions { align-items: flex-start; flex-direction: column; }
   .studio-layout-options { grid-template-columns: 1fr; }
+  .studio-delete-zone > div { align-items: stretch; flex-direction: column; }.studio-delete-zone span { margin-right: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

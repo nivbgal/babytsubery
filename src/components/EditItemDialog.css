@@ -1,0 +1,24 @@
+.edit-dialog-backdrop { position: fixed; inset: 0; z-index: 130; display: grid; place-items: center; padding: 18px; background: rgba(52,38,41,.5); backdrop-filter: blur(6px); }
+.edit-dialog { width: min(560px,100%); max-height: calc(100dvh - 36px); overflow-y: auto; border: 1px solid rgba(110,40,63,.18); border-radius: 24px; color: var(--ink); background: var(--paper-strong); box-shadow: 0 28px 80px rgba(71,24,39,.24); }
+.edit-dialog > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 24px 26px 20px; border-bottom: 1px solid var(--line); }
+.edit-dialog > header p { display: flex; align-items: center; gap: 7px; margin: 0 0 4px; color: var(--rose); font-size: .68rem; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+.edit-dialog h2 { margin: 0; color: var(--berry-deep); font-family: "Libre Caslon Display",Georgia,serif; font-size: 2.15rem; font-weight: 400; line-height: 1; }
+.edit-dialog > header button { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; color: var(--berry); background: var(--paper); }
+.edit-dialog form { display: grid; gap: 18px; padding: 24px 26px; }
+.edit-dialog-photo { width: 100%; max-height: 230px; object-fit: contain; border: 10px solid var(--paper); border-radius: 12px; background: var(--shell); box-shadow: 0 10px 25px rgba(71,24,39,.12); }
+.edit-dialog-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.edit-dialog label { display: grid; gap: 7px; color: var(--berry-deep); font-size: .82rem; font-weight: 700; }
+.edit-dialog label span { color: var(--muted); font-size: .72rem; font-weight: 400; }
+.edit-dialog input,.edit-dialog textarea,.edit-dialog select { width: 100%; min-height: 46px; padding: 10px 12px; border: 1px solid rgba(110,40,63,.22); border-radius: 10px; color: var(--ink); background: #fffdf9; font: inherit; font-size: 1rem; }
+.edit-dialog textarea { resize: vertical; unicode-bidi: plaintext; text-align: start; }
+.edit-dialog-wide { grid-column: 1/-1; }
+.edit-dialog-save { min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 12px; color: var(--paper); background: var(--berry); box-shadow: 0 5px 0 var(--berry-deep); font-weight: 800; }
+.edit-dialog-error { margin: 0; padding: 11px; border-radius: 10px; color: #7d1f3a; background: rgba(233,190,192,.38); }
+.edit-dialog-danger { padding: 18px 26px max(24px,env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: rgba(233,190,192,.1); }
+.edit-dialog-danger > button { min-height: 44px; display: inline-flex; align-items: center; gap: 8px; border: 0; color: #8e2948; background: transparent; font-weight: 800; }
+.edit-dialog-danger > div { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 9px; }
+.edit-dialog-danger p { display: grid; gap: 3px; margin: 0; color: var(--berry-deep); }.edit-dialog-danger p span { color: var(--muted); font-size: .76rem; }
+.edit-dialog-danger > div button { min-height: 42px; padding: 0 13px; border: 1px solid var(--line); border-radius: 10px; color: var(--berry); background: var(--paper); font-weight: 700; }.edit-dialog-danger > div button.is-danger { display: flex; align-items: center; gap: 6px; border-color: #8e2948; color: #fff; background: #8e2948; }
+.edit-dialog-spinner { animation: edit-dialog-spin .8s linear infinite; } @keyframes edit-dialog-spin { to { transform: rotate(360deg); } }
+@media (max-width:620px) { .edit-dialog-backdrop { align-items: end; padding: 0; }.edit-dialog { max-height: 94dvh; border-radius: 22px 22px 0 0; }.edit-dialog > header,.edit-dialog form,.edit-dialog-danger { padding-inline: 18px; }.edit-dialog-grid { grid-template-columns: 1fr; }.edit-dialog-wide { grid-column: auto; }.edit-dialog-danger > div { grid-template-columns: 1fr 1fr; }.edit-dialog-danger p { grid-column: 1/-1; } }
+@media (prefers-reduced-motion:reduce) { .edit-dialog-spinner { animation: none; } }
